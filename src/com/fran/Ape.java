@@ -22,6 +22,7 @@ public class Ape implements Steppable {
     private int memoryCounter;
     private int movementCounter;
     public int populationCount;
+    public int getPopulation(){return this.populationCount; }
 
     /***
      * Constructor takes the simState and an Int2D that represents the centre of the gorillas home range (which will

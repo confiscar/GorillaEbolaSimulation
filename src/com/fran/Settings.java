@@ -8,11 +8,11 @@ package com.fran;
 
 public class Settings {
     /** Amount of groups of gorillas in the habitat*/
-    static public final int groupsOfGorillas = 20;
+    static public final int groupsOfGorillas = 3;
     /** Amount of food sources in grid boundary*/
-    static public final int amountFoodSources = 200;
+    static public final int amountFoodSources = 10;
     /** How much the food sources will spread from the centre*/
-    static public final int foodSpreadingIntensity = 30;
+    static public final int foodSpreadingIntensity = 10;
     /** Maximum quantity of gorillas per group*/
     static public final int maxPopulation = 100;
     /** Minimum quanitity of gorillas per group*/
