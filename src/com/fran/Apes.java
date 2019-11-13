@@ -11,18 +11,15 @@ import sim.field.network.*;
  * the simulation.
  * @author Francisco Caeiro
  * */
-
 public class Apes extends SimState {
     /**Habitat represents the living space that the apes inhabit. Currently has a trivial width and height*/
     public SparseGrid2D habitat = new SparseGrid2D(Settings.simulationWidth,Settings.simulationHeight);
     /**Network that represents the interactions between the apes*/
     public Network interactions = new Network(false);
-
     /**Helper variables that give the center of x axis of the screen*/
     private int centreX = Settings.simulationWidth / 2;
     /**Helper variables that give the center of y axis of the screen*/
     private int centreY = Settings.simulationHeight / 2;
-
     /**Aids the generation of ape groups. Used to shuffle food sources and assign to ape group*/
     private Bag foodSources = new Bag(Settings.amountFoodSources);
 
@@ -32,6 +29,7 @@ public class Apes extends SimState {
     public Apes(){
         this(System.currentTimeMillis());
     }
+
     /**
      * Constructor that takes in seed and feeds in to super SimState constructor
      * */
@@ -41,12 +39,12 @@ public class Apes extends SimState {
     }
 
     /**
-     * Function called at the start of running the model. Clears and initializes the objects
-     * in the simulation.
+     * Function called at the start of running the model. Clears and initializes the objects in the simulation.
      * */
     public void start(){
         /*Initializes RNG generator as well as resetting things like scheduler */
         super.start();
+
         /*Clear the hash map in the habitat when restarted*/
         habitat.clear();
         interactions.clear();
@@ -84,12 +82,14 @@ public class Apes extends SimState {
         /*Creates a copy and randomly shuffles our foodSources bag*/
         Bag foodSourceLocations = new Bag(foodSources);
         foodSourceLocations.shuffle(random);
+
         /*Throws an error if more gorillas then food sources. This is problem due to not being able to assign all
           gorilla groups a unique food source*/
         if(Settings.groupsOfGorillas > Settings.amountFoodSources){
             System.out.println("Settings Error: Amount of gorilla groups can't be larger than amount of food sources.");
             System.exit(-1);
         }
+
         /*Loop creates n amount of groups*/
         for(int i = 0; i < Settings.groupsOfGorillas; i++){
             /*Pops random food source and sets Apes initial location to it*/

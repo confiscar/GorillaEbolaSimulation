@@ -99,18 +99,26 @@ public class ApesWithUI extends GUIState {
         Apes apes = (Apes) state;
 
         habitatPortrayal.setField(apes.habitat);
-        habitatPortrayal.setPortrayalForClass(Ape.class, new OvalPortrayal2D());
-    habitatPortrayal.setPortrayalForClass(
-        FoodSource.class,
-        new RectanglePortrayal2D() {
-          @Override
-          public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
-            if (object instanceof FoodSource)
-                if(!((FoodSource) object).visible && Settings.hideUnusedFoodSources)
-                    return;
-            paint = new Color(0, 0, 255);
-            super.draw(object, graphics, info);
-          }
+        habitatPortrayal.setPortrayalForClass(Ape.class, new OvalPortrayal2D(){
+            @Override
+            public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
+                if(object instanceof Ape){
+                    scale =  ((double)((Ape) object).populationCount - Settings.minPopulation)
+                            / (double)(Settings.maxPopulation - Settings.minPopulation);
+                }
+                paint = new Color(255, 255, 255);
+                super.draw(object, graphics, info);
+            }
+        });
+        habitatPortrayal.setPortrayalForClass(FoodSource.class, new RectanglePortrayal2D() {
+              @Override
+              public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
+                if (object instanceof FoodSource)
+                    if(!((FoodSource) object).visible && Settings.hideUnusedFoodSources)
+                        return;
+                paint = new Color(0, 0, 255);
+                super.draw(object, graphics, info);
+              }
         });
 
         interactionsPortrayal.setField(new SpatialNetwork2D(apes.habitat, apes.interactions));
