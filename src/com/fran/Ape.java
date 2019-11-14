@@ -17,12 +17,11 @@ import sim.util.Int2D;
 
 public class Ape implements Steppable {
 
-    private Int2D centerHomeRange;
     private Bag neighbourFoodSources;
+    public int populationCount;
     private int memoryCounter;
     private int movementCounter;
-    public int populationCount;
-    public int getPopulation(){return this.populationCount; }
+    public int getPopulation(){return this.populationCount;}
 
     /***
      * Constructor takes the simState and an Int2D that represents the centre of the gorillas home range (which will
@@ -32,7 +31,6 @@ public class Ape implements Steppable {
         Apes apes = (Apes) simState;
 
         /*Sets the centre, and creates bag that will contain locations of neighbouring food sources*/
-        this.centerHomeRange = centerHomeRange;
         this.neighbourFoodSources = new Bag();
 
         /*This will be the 'timer' for specific gorilla behaviour*/
@@ -74,12 +72,11 @@ public class Ape implements Steppable {
         if(movementCounter <= 0 && neighbourFoodSources.size() > 1){
             /*Reset movement counter*/
             movementCounter = Settings.gorillaFoodWaitTime;
-            FoodSource newSource = getNewFoodSource(simState);
-            habitat.setObjectLocation(this, newSource.location);
+            /*Get new food source*/
+            habitat.setObjectLocation(this, getNewFoodSource(simState).location);
             /*Updates the network of interactions*/
             updateNetwork(simState);
         }
-
     }
 
 
@@ -122,24 +119,20 @@ public class Ape implements Steppable {
         SparseGrid2D habitat = apes.habitat;
 
         /*Create a bag with FoodSource, Probability value pairs*/
-        Bag probabilities = new Bag();
+        Bag probabilities = new Bag(neighbourFoodSources.size());
+        Bag normalisedProbabilities = new Bag(neighbourFoodSources.size());
 
         /*Loops through the neighbouring FoodSources, computes the distance to them and stores
-        * pairs of (FoodSource, probability based on distance)*/
+        * pairs of (FoodSource, probability based on distance). Also calculates sums of all the probabilities*/
         Int2D me = habitat.getObjectLocation(this);
+        double sum = 0;
         for(int i = 0; i < neighbourFoodSources.size(); i++){
             FoodSource fs = (FoodSource) neighbourFoodSources.get(i);
             /*Omits the current food source*/
-            if(me.x != fs.location.x && me.y != fs.location.y)
-                probabilities.add(new Pair<>(fs, calculateProbabilityDistance(me.x, me.y, fs.location.x, fs.location.y)));
-        }
-
-        /*We calculate the sum so we can normalise the probabilities*/
-        double sum = 0;
-        for(int i = 0; i < probabilities.size(); i++){
-            Object obj = probabilities.get(i);
-            if(obj instanceof Pair){
-                sum += (double)((Pair) obj).getValue();
+            if(!(me.x == fs.location.x && me.y == fs.location.y)){
+                double probabilityDistance = calculateProbabilityDistance(me.x, me.y, fs.location.x, fs.location.y);
+                probabilities.add(new Pair<>(fs, probabilityDistance));
+                sum += probabilityDistance;
             }
         }
 
@@ -149,8 +142,8 @@ public class Ape implements Steppable {
             Object obj = probabilities.pop();
             if(obj instanceof Pair){
                 FoodSource fs = (FoodSource)((Pair) obj).getKey();
-                Double value = (Double) ((Pair) obj).getValue();
-                probabilities.push(new Pair<>(fs, value / sum));
+                Double value = (Double) ((Pair) obj).getValue() / sum;
+                normalisedProbabilities.add(new Pair<>(fs, value));
             }
         }
 
@@ -158,20 +151,19 @@ public class Ape implements Steppable {
         double randomDouble = apes.random.nextDouble();
         double choose = 0;
         int index = 0;
-        boolean found = false;
 
-        for(int j = 0; j < probabilities.size() && !found; j++){
-            Object obj = probabilities.get(j);
+        for(int j = 0; j < normalisedProbabilities.size(); j++){
+            Object obj = normalisedProbabilities.get(j);
             if(obj instanceof Pair){
                 choose += (double) ((Pair) obj).getValue();
                 if(randomDouble < choose){
                     index = j;
-                    found = true;
+                    break;
                 }
             }
         }
 
-        return (FoodSource)((Pair)probabilities.get(index)).getKey();
+        return (FoodSource)((Pair)normalisedProbabilities.get(index)).getKey();
     }
 
     private double calculateProbabilityDistance(double gorillaX, double gorillaY, double foodSourceX, double foodSourceY){

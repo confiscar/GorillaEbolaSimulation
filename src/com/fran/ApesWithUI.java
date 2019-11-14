@@ -145,10 +145,7 @@ public class ApesWithUI extends GUIState {
             @Override
             public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
                 if(object instanceof Ape){
-                    scale =  ((double)((Ape) object).populationCount - Settings.minPopulation)
-                            / (double)(Settings.maxPopulation - Settings.minPopulation);
-                    if(scale < 0.1)
-                        scale = 0.1;
+                    scale =  (double)((Ape) object).populationCount / (double)(Settings.maxPopulation);
                     paint = new Color(255 - (object.hashCode() % 200), 255 - (object.hashCode() % 201), 255 - (object.hashCode() % 202));
                 }
                 super.draw(object, graphics, info);
@@ -160,7 +157,7 @@ public class ApesWithUI extends GUIState {
                 if (object instanceof FoodSource)
                     if(!((FoodSource) object).visible && Settings.hideUnusedFoodSources)
                         return;
-                paint = new Color(0, 0, 255);
+                paint = new Color(67, 162, 202);
                 super.draw(object, graphics, info);
               }
         });
@@ -185,7 +182,7 @@ public class ApesWithUI extends GUIState {
         habitatPortrayal.setGridColor(Color.white);
 
         display.reset();
-        display.setBackdrop(Color.green);
+        display.setBackdrop(new Color(168, 221, 181));
         display.repaint();
     }
 
