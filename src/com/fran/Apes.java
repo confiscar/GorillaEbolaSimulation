@@ -12,23 +12,20 @@ import sim.field.network.*;
  * @author Francisco Caeiro
  * */
 public class Apes extends SimState {
+    /**How big the y axis of the simulation will be*/
+    static public final int simulationWidth = (int) (Settings.foodSpreadingIntensity * 2.5);
+    /**How big the x axis of the simulation will be*/
+    static public final int simulationHeight = (int) (Settings.foodSpreadingIntensity * 2.5);
+    /**Helper variables that give the center of x axis of the screen*/
+    static int centreX = simulationWidth / 2;
+    /**Helper variables that give the center of y axis of the screen*/
+    static int centreY = simulationHeight / 2;
     /**Habitat represents the living space that the apes inhabit. Currently has a trivial width and height*/
-    public SparseGrid2D habitat = new SparseGrid2D(Settings.simulationWidth,Settings.simulationHeight);
+    public SparseGrid2D habitat = new SparseGrid2D(simulationWidth,simulationHeight);
     /**Network that represents the interactions between the apes*/
     public Network interactions = new Network(false);
-    /**Helper variables that give the center of x axis of the screen*/
-    private int centreX = Settings.simulationWidth / 2;
-    /**Helper variables that give the center of y axis of the screen*/
-    private int centreY = Settings.simulationHeight / 2;
     /**Aids the generation of ape groups. Used to shuffle food sources and assign to ape group*/
     private Bag foodSources = new Bag(Settings.amountFoodSources);
-
-    /**
-     * Constructor that automatically sets seed to the current time and feeds to SimState constructor
-     * */
-    public Apes(){
-        this(System.currentTimeMillis());
-    }
 
     /**
      * Constructor that takes in seed and feeds in to super SimState constructor
@@ -36,6 +33,13 @@ public class Apes extends SimState {
     public Apes(long seed){
         /* Seed is used when random number generator is initialized*/
         super(seed);
+    }
+
+    /**
+     * Constructor that automatically sets seed to the current time and feeds to SimState constructor
+     * */
+    public Apes(){
+        this(System.currentTimeMillis());
     }
 
     /**
@@ -49,6 +53,8 @@ public class Apes extends SimState {
         habitat.clear();
         interactions.clear();
         foodSources.clear();
+
+        /*Initialize food and apes*/
         initializeFoodSource();
         initializeApeGroups();
     }
@@ -64,7 +70,7 @@ public class Apes extends SimState {
             do{
                 x = centreX + (random.nextInt() % Settings.foodSpreadingIntensity);
                 y = centreY + (random.nextInt() % Settings.foodSpreadingIntensity);
-            }while(x < 0 || x >= Settings.simulationWidth || y < 0 || y >= Settings.simulationHeight || habitat.getObjectsAtLocation(x, y) != null );
+            }while(x < 0 || x >= simulationWidth || y < 0 || y >= simulationHeight || habitat.getObjectsAtLocation(x, y) != null );
 
             /*Initializes new food source, adds it to habitat and foodSource bag*/
             Int2D location = new Int2D(x, y);
@@ -72,7 +78,6 @@ public class Apes extends SimState {
             habitat.setObjectLocation(food, location);
             foodSources.add(food);
         }
-
     }
 
     /**
@@ -106,6 +111,9 @@ public class Apes extends SimState {
             schedule.scheduleRepeating(ape);
         }
 
+        double gorillaDensity = (double) Settings.groupsOfGorillas
+                / (double)(Settings.foodSpreadingIntensity * Settings.foodSpreadingIntensity);
+        System.out.println("Gorilla Density (per cell) : " + gorillaDensity);
 
     }
 

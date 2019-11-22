@@ -19,6 +19,8 @@ import sim.util.Bag;
 import javax.swing.*;
 import java.awt.*;
 import java.util.Comparator;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  *  ApesWithUI is the entry point for the GUI. Running the main of this class will open up the console and visualization
@@ -27,11 +29,10 @@ import java.util.Comparator;
  * */
 
 public class ApesWithUI extends GUIState {
-
-    SparseGridPortrayal2D habitatPortrayal = new SparseGridPortrayal2D(); //Single field portrayal
-    NetworkPortrayal2D interactionsPortrayal = new NetworkPortrayal2D(); //Network of interactions portrayal
-    public Display2D display; //Main display object, can display multiple fields
-    public JFrame displayFrame; //The frame that will encapsulate
+    private SparseGridPortrayal2D habitatPortrayal = new SparseGridPortrayal2D(); //Single field portrayal
+    private NetworkPortrayal2D interactionsPortrayal = new NetworkPortrayal2D(); //Network of interactions portrayal
+    private Display2D display; //Main display object, can display multiple fields
+    private JFrame displayFrame; //The frame that will encapsulate
 
     /**
      * Constructor that creates the subclass of the SimState 'Apes'.
@@ -70,7 +71,7 @@ public class ApesWithUI extends GUIState {
         super.init(c);
 
         /*Creates our display for the actual simulation*/
-        display = new Display2D(Settings.simulationWidth * 8, Settings.simulationHeight * 8, this);
+        display = new Display2D(920, 920, this);
         display.setClipping(false);
 
         /*Creates JFrame, configures it and registers it with the console*/
@@ -98,47 +99,45 @@ public class ApesWithUI extends GUIState {
     /**
      * Initial setup for the visualization
      */
-    public void setupPortrayals(){
+    private void setupPortrayals(){
+        setupHabitatPortrayal();
+        setInteractionsPortrayal();
+
+        display.reset();
+        display.setBackdrop(new Color(168, 221, 181));
+        display.repaint();
+    }
+
+    private void setupHabitatPortrayal(){
         Apes apes = (Apes) state;
 
-        DrawPolicy drawSmallerFirst = new DrawPolicy() {
-            @Override
-            public boolean objectToDraw(Bag bag, Bag bag1) {
-                Bag temp = new Bag(bag);
+        DrawPolicy drawSmallerFirst = (bag, bag1) -> {
+            /*Stores the ordered apes*/
+            Bag temp = new Bag();
 
-                /*Acts like a filter, removes all objects that aren't apes*/
-                for(boolean isDone = false; !isDone;){
-                    isDone = true;
-                    int size = temp.size();
-                    boolean found = false;
-                    for(int i = 0; i < size && !found; i++){
-                        if(!(temp.get(i) instanceof Ape)){
-                            bag1.add(temp.remove(i));
-                            found = true;
-                            isDone = false;
-                        }
-                    }
-                }
+            /*IDEs WILL COMPLAIN ABOUT THIS. BAG IMPLEMENTS COLLECTION BUT DOESN'T USE GENERICS. CALLS TO stream()
+            * WILL RETURN A RAW TYPED STREAM, THEREFORE MANUAL CASTING HAS TO BE DONE. */
 
-                Comparator<Ape> comparator = new Comparator<Ape>() {
-                    @Override
-                    public int compare(Ape ape, Ape t1) {
-                        int pop1 = ape.populationCount;
-                        int pop2 = t1.populationCount;
+            /*Anything that's not an ape gets put in first. NOTE: ORDER NOT GUARANTEED*/
+            Stream<Object> stream = bag.stream();
+            bag1.addAll(stream.filter(obj -> !(obj instanceof Ape)).collect(Collectors.toList()));
 
-                        if(pop1 < pop2){return -1;}
-                        else if(pop1 == pop2){return 0;}
-                        else{return 1;}
-                    }
-                };
-                temp.sort(comparator);
-                int size = temp.size();
-                for(int i = size-1; i >= 0; i--){ bag1.add(temp.get(i)); }
+            /*Re-open stream and get all ape objects*/
+            stream = bag.stream();
+            temp.addAll(stream.filter(obj->obj instanceof Ape).collect(Collectors.toList()));
 
-                return true;
-            }
+            /*Compare and sort the apes by population count*/
+            Comparator<Ape> comparator = Comparator.comparingInt(ape -> ape.populationCount);
+            temp.sort(comparator);
+
+            /*addAll() cant be used because bags are ordered in reverse*/
+            int size = temp.size();
+            for(int i = size-1; i >= 0; i--){ bag1.add(temp.get(i)); }
+
+            return true;
         };
 
+        /*Draw smaller apes first, as ovals and give unique color using hashcode*/
         habitatPortrayal.setField(apes.habitat);
         habitatPortrayal.setDrawPolicy(drawSmallerFirst);
         habitatPortrayal.setPortrayalForClass(Ape.class, new OvalPortrayal2D(){
@@ -151,17 +150,38 @@ public class ApesWithUI extends GUIState {
                 super.draw(object, graphics, info);
             }
         });
+
+        /*Draw food sources as blue, and if heat map enabled slowly turn red*/
         habitatPortrayal.setPortrayalForClass(FoodSource.class, new RectanglePortrayal2D() {
-              @Override
-              public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
+            @Override
+            public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
                 if (object instanceof FoodSource)
                     if(!((FoodSource) object).visible && Settings.hideUnusedFoodSources)
                         return;
-                paint = new Color(67, 162, 202);
+                if(Settings.enableHeatMap){
+                    if (object instanceof FoodSource) {
+                        paint = new Color((int)((FoodSource)object).getHeat(), 0, 255 - (int)((FoodSource)object).getHeat());
+                    }
+                }
+                else
+                    paint = new Color(67, 162, 202);
                 super.draw(object, graphics, info);
-              }
+            }
         });
 
+        /*Draw red border of active area, draw grid lines as thin white lines*/
+        habitatPortrayal.setBorder(true);
+        habitatPortrayal.setBorderColor(Color.red);
+        habitatPortrayal.setGridModulus(1);
+        habitatPortrayal.setGridLines(true);
+        habitatPortrayal.setGridLineFraction(0.01);
+        habitatPortrayal.setGridColor(Color.white);
+    }
+
+    private void setInteractionsPortrayal(){
+        Apes apes = (Apes) state;
+
+        /*Draw edges as blue and slowly turn red as more interactions happen*/
         interactionsPortrayal.setField(new SpatialNetwork2D(apes.habitat, apes.interactions));
         interactionsPortrayal.setPortrayalForAll(new SimpleEdgePortrayal2D(){
             @Override
@@ -173,17 +193,6 @@ public class ApesWithUI extends GUIState {
                 super.draw(object, graphics, info);
             }
         });
-
-        habitatPortrayal.setBorder(true);
-        habitatPortrayal.setBorderColor(Color.red);
-        habitatPortrayal.setGridModulus(1);
-        habitatPortrayal.setGridLines(true);
-        habitatPortrayal.setGridLineFraction(0.01);
-        habitatPortrayal.setGridColor(Color.white);
-
-        display.reset();
-        display.setBackdrop(new Color(168, 221, 181));
-        display.repaint();
     }
 
     public static String getName() { return "Spread of Ebola Among Apes"; }

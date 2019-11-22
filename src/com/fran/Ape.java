@@ -19,9 +19,13 @@ public class Ape implements Steppable {
 
     private Bag neighbourFoodSources;
     public int populationCount;
+    public int femaleCount;
+    public int maleCount;
     private int memoryCounter;
     private int movementCounter;
     public int getPopulation(){return this.populationCount;}
+    public int getMales(){return this.maleCount;}
+    public int getFemales(){return this.femaleCount;}
 
     /***
      * Constructor takes the simState and an Int2D that represents the centre of the gorillas home range (which will
@@ -38,6 +42,8 @@ public class Ape implements Steppable {
         movementCounter = Settings.gorillaFoodWaitTime;
 
         populationCount = apes.random.nextInt(Settings.maxPopulation - Settings.minPopulation) + Settings.minPopulation;
+        femaleCount = (int)((double)populationCount * apes.random.nextDouble());
+        maleCount = populationCount - femaleCount;
 
         /*Gets the moore neighbours (circle around the gorillas) */
         Bag allNeighbours = apes.habitat.getMooreNeighbors(
@@ -73,7 +79,9 @@ public class Ape implements Steppable {
             /*Reset movement counter*/
             movementCounter = Settings.gorillaFoodWaitTime;
             /*Get new food source*/
-            habitat.setObjectLocation(this, getNewFoodSource(simState).location);
+            FoodSource fs = getNewFoodSource(simState);
+            habitat.setObjectLocation(this, fs.location);
+            fs.incrementHeat();
             /*Updates the network of interactions*/
             updateNetwork(simState);
         }
