@@ -1,16 +1,16 @@
-package com.fran;
+package com.fran.sim;
 
 import sim.util.Int2D;
 /** Class represents the food source object in the model. */
 public class FoodSource {
   /** Represents the current location of the source */
-  public Int2D location;
+  Int2D location;
   /** True if gorillas has this food source in home range */
-  public boolean visible;
+  boolean visible;
   /** Represents how much activity has occurred on food source */
-  public double heat;
+  private double heat;
 
-  public double getHeat() {
+  double getHeat() {
     return heat;
   }
 
@@ -24,4 +24,6 @@ public class FoodSource {
     heat += 0.2;
     if (heat > 255) heat = 255;
   }
+
+  public void setVisible(boolean value){this.visible = value;}
 }

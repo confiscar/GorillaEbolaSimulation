@@ -1,4 +1,4 @@
-package com.fran;
+package com.fran.sim;
 
 import sim.display.Console;
 import sim.display.Controller;
@@ -38,15 +38,13 @@ public class ApesWithUI extends GUIState {
   /** The frame that will encapsulate the display*/
   private JFrame displayFrame;
 
-  /** Constructor that creates the subclass of the SimState 'Apes'. */
+
   public ApesWithUI() {
     super(new Apes(System.currentTimeMillis()));
   }
 
   /**
-   * Constructor that passes the SimState instead of creating it.
-   *
-   * @param state
+   * @param state SimState class used for adding portrayals to frame
    */
   public ApesWithUI(SimState state) {
     super(state);
@@ -61,7 +59,7 @@ public class ApesWithUI extends GUIState {
   /**
    * Called when a simulation is loaded from a checkpoint.
    *
-   * @param state
+   * @param state Sets global state variable and reloads portrayals
    */
   public void load(SimState state) {
     super.load(state);
@@ -72,7 +70,7 @@ public class ApesWithUI extends GUIState {
    * Called when the GUI is initially created. Function created the JFrame window and ensures to
    * register the frame so the console can find it.
    *
-   * @param c
+   * @param c Controller class used to register Frames created
    */
   public void init(Controller c) {
     super.init(c);
@@ -114,7 +112,7 @@ public class ApesWithUI extends GUIState {
     Apes apes = (Apes) state;
 
     DrawPolicy drawSmallerFirst =
-        (bag, bag1) -> {
+        (bagIn, bagOut) -> {
           /*Stores the ordered apes*/
           Bag temp = new Bag();
 
@@ -122,11 +120,11 @@ public class ApesWithUI extends GUIState {
            * WILL RETURN A RAW TYPED STREAM, THEREFORE MANUAL CASTING HAS TO BE DONE. */
 
           /*Anything that's not an ape gets put in first. NOTE: ORDER NOT GUARANTEED*/
-          Stream<Object> stream = bag.stream();
-          bag1.addAll(stream.filter(obj -> !(obj instanceof Ape)).collect(Collectors.toList()));
+          Stream<Object> stream = bagIn.stream();
+          bagOut.addAll(stream.filter(obj -> !(obj instanceof Ape)).collect(Collectors.toList()));
 
           /*Re-open stream and get all ape objects*/
-          stream = bag.stream();
+          stream = bagIn.stream();
           temp.addAll(stream.filter(obj -> obj instanceof Ape).collect(Collectors.toList()));
 
           /*Compare and sort the apes by population count*/
@@ -136,7 +134,7 @@ public class ApesWithUI extends GUIState {
           /*addAll() cant be used because bags are ordered in reverse*/
           int size = temp.size();
           for (int i = size - 1; i >= 0; i--) {
-            bag1.add(temp.get(i));
+            bagOut.add(temp.get(i));
           }
 
           return true;

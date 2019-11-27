@@ -1,13 +1,15 @@
-package com.fran;
+package com.fran.sim;
 
 import javafx.util.Pair;
-import org.jfree.data.time.ohlc.OHLC;
 import sim.engine.SimState;
 import sim.engine.Steppable;
 import sim.field.grid.SparseGrid2D;
 import sim.field.network.Edge;
 import sim.util.Bag;
 import sim.util.Int2D;
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Ape is a steppable agent in the simulation. It represents the gorilla groups and controls the
@@ -18,10 +20,10 @@ import sim.util.Int2D;
 public class Ape implements Steppable {
 
   private Bag neighbourFoodSources;
+  private Bag memoryFoodSources;
   public int populationCount;
   public int femaleCount;
   public int maleCount;
-  private int memoryCounter;
   private int movementCounter;
 
   public int getPopulation() {
@@ -43,11 +45,10 @@ public class Ape implements Steppable {
   public Ape(SimState simState, Int2D centerHomeRange) {
     Apes apes = (Apes) simState;
 
-    /*Sets the centre, and creates bag that will contain locations of neighbouring food sources*/
+    /*Creates bags that will contain locations of neighbouring food sources (one is for the memory)*/
     this.neighbourFoodSources = new Bag();
-
+    this.memoryFoodSources = new Bag(Settings.gorillaMemoryLength);
     /*This will be the 'timer' for specific gorilla behaviour*/
-    memoryCounter = Settings.gorillaMemoryDeletionTime;
     movementCounter = Settings.gorillaFoodWaitTime;
 
     populationCount =
@@ -66,15 +67,12 @@ public class Ape implements Steppable {
             true);
 
     /*Filters the objects to just get the food sources*/
-    for (int i = 0; i < allNeighbours.size(); i++) {
-      Object obj = allNeighbours.get(i);
-      if (obj instanceof FoodSource) {
-        FoodSource fs = (FoodSource) obj;
-        /*Tags the food source to not be deleted*/
-        fs.visible = true;
-        neighbourFoodSources.add(fs);
-      }
-    }
+    Stream<Object> stream = allNeighbours.stream();
+    neighbourFoodSources.addAll(stream.filter(obj -> obj instanceof FoodSource).collect(Collectors.toList()));
+    neighbourFoodSources.forEach(obj -> ((FoodSource)obj).setVisible(true));
+
+    stream = neighbourFoodSources.stream();
+    memoryFoodSources.addAll(stream.filter(obj -> ((FoodSource)obj).location == centerHomeRange).collect(Collectors.toList()));
   }
 
   /**
@@ -87,7 +85,6 @@ public class Ape implements Steppable {
     Apes apes = (Apes) simState;
     SparseGrid2D habitat = apes.habitat;
 
-    // memoryCounter--;
     movementCounter--;
 
     /*If movementCounter runs out, search for new food source*/
@@ -152,12 +149,17 @@ public class Ape implements Steppable {
     for (int i = 0; i < neighbourFoodSources.size(); i++) {
       FoodSource fs = (FoodSource) neighbourFoodSources.get(i);
       /*Omits the current food source*/
-      if (!(me.x == fs.location.x && me.y == fs.location.y)) {
+      if (!(me.x == fs.location.x && me.y == fs.location.y) && !memoryFoodSources.contains(fs)) {
         double probabilityDistance =
             calculateProbabilityDistance(me.x, me.y, fs.location.x, fs.location.y);
         probabilities.add(new Pair<>(fs, probabilityDistance));
         sum += probabilityDistance;
       }
+    }
+
+    if(probabilities.isEmpty()){
+      memoryFoodSources = new Bag();
+      return getNewFoodSource(simState);
     }
 
     /*Since Pairs are immutable, pops all pairs and pushed new pairs that are divided by the sum*/
@@ -186,8 +188,12 @@ public class Ape implements Steppable {
         }
       }
     }
+    FoodSource returnFs = (FoodSource) ((Pair) normalisedProbabilities.get(index)).getKey();
+    if(memoryFoodSources.size() >= Settings.gorillaMemoryLength)
+      memoryFoodSources.removeNondestructively(0);
+    memoryFoodSources.add(returnFs);
 
-    return (FoodSource) ((Pair) normalisedProbabilities.get(index)).getKey();
+    return returnFs;
   }
 
   private double calculateProbabilityDistance(

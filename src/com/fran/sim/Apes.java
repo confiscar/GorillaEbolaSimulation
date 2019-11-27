@@ -1,4 +1,4 @@
-package com.fran;
+package com.fran.sim;
 
 import sim.engine.SimState;
 import sim.field.grid.SparseGrid2D;
@@ -14,17 +14,13 @@ import sim.field.network.*;
  */
 public class Apes extends SimState {
   /** How big the y axis of the simulation will be */
-  private static final int simulationWidth = (int) (Settings.foodSpreadingIntensity * 2.5);
+  private static final int simulationWidth = (int) (Settings.foodSpreadingIntensity * 3);
   /** How big the x axis of the simulation will be */
-  private static final int simulationHeight = (int) (Settings.foodSpreadingIntensity * 2.5);
-  /** Helper variables that give the center of x axis of the screen */
-  private static int centreX = simulationWidth / 2;
-  /** Helper variables that give the center of y axis of the screen */
-  private static int centreY = simulationHeight / 2;
-  /** Habitat represents the living space that the apes inhabit.*/
-  public SparseGrid2D habitat = new SparseGrid2D(simulationWidth, simulationHeight);
+  private static final int simulationHeight = (int) (Settings.foodSpreadingIntensity * 3);
+  /** Habitat represents the living space that the apes inhabit. */
+  SparseGrid2D habitat = new SparseGrid2D(simulationWidth, simulationHeight);
   /** Network that represents the interactions between the apes */
-  public Network interactions = new Network(false);
+  Network interactions = new Network(false);
   /** Aids the generation of ape groups. Used to shuffle food sources and assign to ape group */
   private Bag foodSources = new Bag(Settings.amountFoodSources);
 
@@ -64,13 +60,24 @@ public class Apes extends SimState {
    * centre.
    */
   private void initializeFoodSource() {
+
+    /*Basic error checking to see if all food sources can be placed*/
+    int areaOfFoodSpread = (int) Math.pow((Settings.foodSpreadingIntensity * 2) + 1, 2);
+    if (Settings.amountFoodSources > areaOfFoodSpread) {
+      System.out.println(
+          "Settings Error: Amount of food sources bigger than possible area to place them.");
+      System.exit(-1);
+    }
+
     /*Creates n amount of food sources*/
     for (int i = 0; i < Settings.amountFoodSources; i++) {
       int x, y;
       /*Keeps looping until find two unique pairs of x and y for the food source*/
       do {
-        x = centreX + (random.nextInt() % Settings.foodSpreadingIntensity);
-        y = centreY + (random.nextInt() % Settings.foodSpreadingIntensity);
+        int centreX = simulationWidth / 2;
+        int centreY = simulationHeight / 2;
+        x = centreX + (random.nextInt() % (Settings.foodSpreadingIntensity + 1));
+        y = centreY + (random.nextInt() % (Settings.foodSpreadingIntensity + 1));
       } while (x < 0
           || x >= simulationWidth
           || y < 0
@@ -90,17 +97,17 @@ public class Apes extends SimState {
    * home range.
    */
   private void initializeApeGroups() {
-    /*Creates a copy and randomly shuffles our foodSources bag*/
-    Bag foodSourceLocations = new Bag(foodSources);
-    foodSourceLocations.shuffle(random);
-
     /*Throws an error if more gorillas then food sources. This is problem due to not being able to assign all
     gorilla groups a unique food source*/
     if (Settings.groupsOfGorillas > Settings.amountFoodSources) {
       System.out.println(
-          "Settings Error: Amount of gorilla groups can't be larger than amount of food sources.");
-      System.exit(-1);
+              "Settings Error: Amount of gorilla groups can't be larger than amount of food sources.");
+      System.exit(-2);
     }
+
+    /*Creates a copy and randomly shuffles our foodSources bag*/
+    Bag foodSourceLocations = new Bag(foodSources);
+    foodSourceLocations.shuffle(random);
 
     /*Loop creates n amount of groups*/
     for (int i = 0; i < Settings.groupsOfGorillas; i++) {
@@ -116,8 +123,9 @@ public class Apes extends SimState {
 
     double gorillaDensity =
         (double) Settings.groupsOfGorillas
-            / (double) (Settings.foodSpreadingIntensity * Settings.foodSpreadingIntensity);
-    System.out.println("Gorilla Density (per cell) : " + gorillaDensity);
+            / ((double) Math.pow((2 * Settings.foodSpreadingIntensity) + 1, 2)
+                * Settings.cellSideLength);
+    System.out.println("Gorilla Density per m^2 : " + gorillaDensity);
   }
 
   public static void main(String[] args) {
