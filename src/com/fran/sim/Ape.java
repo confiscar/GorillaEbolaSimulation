@@ -21,19 +21,20 @@ public class Ape implements Steppable {
 
   private Bag neighbourFoodSources;
   private Bag memoryFoodSources;
-  public int populationCount;
-  public int femaleCount;
-  public int maleCount;
+  private int populationCount;
+  private int femaleCount;
+  private int maleCount;
   private int movementCounter;
 
+  /** Java Bean to display population*/
   public int getPopulation() {
     return this.populationCount;
   }
-
+  /** Java Bean to display male apes*/
   public int getMales() {
     return this.maleCount;
   }
-
+  /** Java Bean to display females apes*/
   public int getFemales() {
     return this.femaleCount;
   }
@@ -42,7 +43,7 @@ public class Ape implements Steppable {
    * * Constructor takes the simState and an Int2D that represents the centre of the gorillas home
    * range (which will be a randomly chosen food source)
    */
-  public Ape(SimState simState, Int2D centerHomeRange) {
+  Ape(SimState simState, Int2D centerHomeRange) {
     Apes apes = (Apes) simState;
 
     /*Creates bags that will contain locations of neighbouring food sources (one is for the memory)*/
@@ -69,7 +70,7 @@ public class Ape implements Steppable {
     /*Filters the objects to just get the food sources*/
     Stream<Object> stream = allNeighbours.stream();
     neighbourFoodSources.addAll(stream.filter(obj -> obj instanceof FoodSource).collect(Collectors.toList()));
-    neighbourFoodSources.forEach(obj -> ((FoodSource)obj).setVisible(true));
+    neighbourFoodSources.forEach(obj -> ((FoodSource)obj).setVisible());
 
     stream = neighbourFoodSources.stream();
     memoryFoodSources.addAll(stream.filter(obj -> ((FoodSource)obj).location == centerHomeRange).collect(Collectors.toList()));
@@ -94,7 +95,6 @@ public class Ape implements Steppable {
       /*Get new food source*/
       FoodSource fs = getNewFoodSource(simState);
       habitat.setObjectLocation(this, fs.location);
-      fs.incrementHeat();
       /*Updates the network of interactions*/
       updateNetwork(simState);
     }
@@ -148,7 +148,7 @@ public class Ape implements Steppable {
     double sum = 0;
     for (int i = 0; i < neighbourFoodSources.size(); i++) {
       FoodSource fs = (FoodSource) neighbourFoodSources.get(i);
-      /*Omits the current food source*/
+      /*Omits current food source if at same location as agent or if in memory*/
       if (!(me.x == fs.location.x && me.y == fs.location.y) && !memoryFoodSources.contains(fs)) {
         double probabilityDistance =
             calculateProbabilityDistance(me.x, me.y, fs.location.x, fs.location.y);
@@ -193,6 +193,8 @@ public class Ape implements Steppable {
       memoryFoodSources.removeNondestructively(0);
     memoryFoodSources.add(returnFs);
 
+
+    returnFs.incrementHeat();
     return returnFs;
   }
 

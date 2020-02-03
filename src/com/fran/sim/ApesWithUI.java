@@ -1,5 +1,6 @@
 package com.fran.sim;
 
+import com.fran.util.BorderedOvalPortrayal2D;
 import sim.display.Console;
 import sim.display.Controller;
 import sim.display.Display2D;
@@ -12,7 +13,6 @@ import sim.portrayal.grid.SparseGridPortrayal2D;
 import sim.portrayal.network.NetworkPortrayal2D;
 import sim.portrayal.network.SimpleEdgePortrayal2D;
 import sim.portrayal.network.SpatialNetwork2D;
-import sim.portrayal.simple.OvalPortrayal2D;
 import sim.portrayal.simple.RectanglePortrayal2D;
 import sim.util.Bag;
 
@@ -35,17 +35,14 @@ public class ApesWithUI extends GUIState {
   private NetworkPortrayal2D interactionsPortrayal = new NetworkPortrayal2D();
   /** Main display object, can display multiple fields */
   private Display2D display;
-  /** The frame that will encapsulate the display*/
+  /** The frame that will encapsulate the display */
   private JFrame displayFrame;
-
 
   public ApesWithUI() {
     super(new Apes(System.currentTimeMillis()));
   }
 
-  /**
-   * @param state SimState class used for adding portrayals to frame
-   */
+  /** @param state SimState class used for adding portrayals to frame */
   public ApesWithUI(SimState state) {
     super(state);
   }
@@ -128,7 +125,7 @@ public class ApesWithUI extends GUIState {
           temp.addAll(stream.filter(obj -> obj instanceof Ape).collect(Collectors.toList()));
 
           /*Compare and sort the apes by population count*/
-          Comparator<Ape> comparator = Comparator.comparingInt(ape -> ape.populationCount);
+          Comparator<Ape> comparator = Comparator.comparingInt(Ape::getPopulation);
           temp.sort(comparator);
 
           /*addAll() cant be used because bags are ordered in reverse*/
@@ -145,17 +142,19 @@ public class ApesWithUI extends GUIState {
     habitatPortrayal.setDrawPolicy(drawSmallerFirst);
     habitatPortrayal.setPortrayalForClass(
         Ape.class,
-        new OvalPortrayal2D() {
+        new BorderedOvalPortrayal2D() {
           @Override
           public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
             if (object instanceof Ape) {
-              scale = (double) ((Ape) object).populationCount / (double) (Settings.maxPopulation);
+              scale = (double) ((Ape) object).getPopulation() / (double) (Settings.maxPopulation);
               paint =
                   new Color(
                       255 - (object.hashCode() % 200),
                       255 - (object.hashCode() % 201),
                       255 - (object.hashCode() % 202));
+              innerPaint = Color.green;
             }
+
             super.draw(object, graphics, info);
           }
         });
@@ -166,17 +165,20 @@ public class ApesWithUI extends GUIState {
         new RectanglePortrayal2D() {
           @Override
           public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
-            if (object instanceof FoodSource)
+            if (object instanceof FoodSource) {
               if (!((FoodSource) object).visible && Settings.hideUnusedFoodSources) return;
-            if (Settings.enableHeatMap) {
-              if (object instanceof FoodSource) {
-                paint =
-                    new Color(
-                        (int) ((FoodSource) object).getHeat(),
-                        0,
-                        255 - (int) ((FoodSource) object).getHeat());
+              if (!((FoodSource) object).visitedByChimpanzees) {
+                if (Settings.enableHeatMap) {
+                  paint =
+                      new Color(
+                          (int) ((FoodSource) object).getHeat(),
+                          0,
+                          255 - (int) ((FoodSource) object).getHeat());
+                } else paint = new Color(67, 162, 202);
+              } else {
+                paint = new Color(237, 192, 28);
               }
-            } else paint = new Color(67, 162, 202);
+            }
             super.draw(object, graphics, info);
           }
         });

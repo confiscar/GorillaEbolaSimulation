@@ -14,9 +14,9 @@ import sim.field.network.*;
  */
 public class Apes extends SimState {
   /** How big the y axis of the simulation will be */
-  private static final int simulationWidth = (int) (Settings.foodSpreadingIntensity * 3);
+  private static final int simulationWidth = (Settings.foodSpreadingIntensity * 3);
   /** How big the x axis of the simulation will be */
-  private static final int simulationHeight = (int) (Settings.foodSpreadingIntensity * 3);
+  private static final int simulationHeight = (Settings.foodSpreadingIntensity * 3);
   /** Habitat represents the living space that the apes inhabit. */
   SparseGrid2D habitat = new SparseGrid2D(simulationWidth, simulationHeight);
   /** Network that represents the interactions between the apes */
@@ -25,7 +25,7 @@ public class Apes extends SimState {
   private Bag foodSources = new Bag(Settings.amountFoodSources);
 
   /** Constructor that takes in seed and feeds in to super SimState constructor */
-  public Apes(long seed) {
+  Apes(long seed) {
     /* Seed is used when random number generator is initialized*/
     super(seed);
   }
@@ -89,6 +89,7 @@ public class Apes extends SimState {
       FoodSource food = new FoodSource(location);
       habitat.setObjectLocation(food, location);
       foodSources.add(food);
+      schedule.scheduleRepeating(food);
     }
   }
 
@@ -101,7 +102,7 @@ public class Apes extends SimState {
     gorilla groups a unique food source*/
     if (Settings.groupsOfGorillas > Settings.amountFoodSources) {
       System.out.println(
-              "Settings Error: Amount of gorilla groups can't be larger than amount of food sources.");
+          "Settings Error: Amount of gorilla groups can't be larger than amount of food sources.");
       System.exit(-2);
     }
 
