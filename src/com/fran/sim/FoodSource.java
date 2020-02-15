@@ -15,6 +15,7 @@ public class FoodSource implements Steppable {
   private int visitedCounter;
   /** Represents how much activity has occurred on food source */
   private double heat;
+  private int lingerCounter;
 
   double getHeat() {
     return heat;
@@ -26,6 +27,7 @@ public class FoodSource implements Steppable {
     this.visitedByChimpanzees = false;
     this.heat = 0.0;
     this.visitedCounter = Settings.gorillaFoodWaitTime;
+    this.lingerCounter = Settings.chimpanzeeLingerTime;
   }
 
   void incrementHeat() {
@@ -39,17 +41,20 @@ public class FoodSource implements Steppable {
 
   @Override
   public void step(SimState simState) {
-    visitedCounter--;
-
-    if (visitedCounter <= 0) {
-      if (visitedByChimpanzees) {
+    if(visitedByChimpanzees){
+      lingerCounter--;
+      if (lingerCounter <= 0) {
         visitedByChimpanzees = false;
-      } else {
-        if (simState.random.nextDouble() <= Settings.chimpanzeeEncounter) {
-          visitedByChimpanzees = true;
-        }
+        lingerCounter = Settings.chimpanzeeLingerTime;
       }
-      visitedCounter = Settings.gorillaFoodWaitTime;
+    }
+    else{
+      visitedCounter--;
+      if (visitedCounter <= 0) {
+        if (simState.random.nextDouble() <= Settings.chimpanzeeEncounter)
+          visitedByChimpanzees = true;
+        visitedCounter = Settings.gorillaFoodWaitTime;
+      }
     }
   }
 }

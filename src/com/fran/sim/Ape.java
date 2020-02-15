@@ -129,6 +129,7 @@ public class Ape implements Steppable {
           interactionCount++;
           apes.interactions.updateEdge(edge, this, obj, interactionCount);
         }
+        apes.recordPrinter.addInteractionApe(this, (Ape) obj);
       }
     }
   }

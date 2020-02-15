@@ -1,6 +1,8 @@
 package com.fran.sim;
 
 import com.fran.util.BorderedOvalPortrayal2D;
+import com.fran.util.FranConsole;
+import com.fran.util.RecordPrinter;
 import sim.display.Console;
 import sim.display.Controller;
 import sim.display.Display2D;
@@ -216,7 +218,7 @@ public class ApesWithUI extends GUIState {
 
   public static void main(String[] args) {
     ApesWithUI vid = new ApesWithUI();
-    Console c = new Console(vid);
+    FranConsole c = new FranConsole(vid);
     c.setVisible(true);
   }
 }

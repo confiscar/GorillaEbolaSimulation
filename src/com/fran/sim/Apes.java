@@ -1,5 +1,6 @@
 package com.fran.sim;
 
+import com.fran.util.RecordPrinter;
 import sim.engine.SimState;
 import sim.field.grid.SparseGrid2D;
 import sim.util.Bag;
@@ -24,8 +25,10 @@ public class Apes extends SimState {
   /** Aids the generation of ape groups. Used to shuffle food sources and assign to ape group */
   private Bag foodSources = new Bag(Settings.amountFoodSources);
 
+  public RecordPrinter recordPrinter = new RecordPrinter();
+
   /** Constructor that takes in seed and feeds in to super SimState constructor */
-  Apes(long seed) {
+  public Apes(long seed) {
     /* Seed is used when random number generator is initialized*/
     super(seed);
   }
@@ -124,7 +127,7 @@ public class Apes extends SimState {
 
     double gorillaDensity =
         (double) Settings.groupsOfGorillas
-            / ((double) Math.pow((2 * Settings.foodSpreadingIntensity) + 1, 2)
+            / (Math.pow((2 * Settings.foodSpreadingIntensity) + 1, 2)
                 * Settings.cellSideLength);
     System.out.println("Gorilla Density per m^2 : " + gorillaDensity);
   }
