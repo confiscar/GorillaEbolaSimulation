@@ -95,9 +95,11 @@ public class ApesWithUI extends GUIState {
 
   /** Initial setup for the visualization */
   private void setupPortrayals() {
+    // Setup of how Swing will display the agents and objects on the screen
     setupHabitatPortrayal();
     setInteractionsPortrayal();
 
+    // Quick reset of the frame to make sure there is a clean board
     display.reset();
     display.setBackdrop(new Color(168, 221, 181));
     display.repaint();
@@ -145,12 +147,21 @@ public class ApesWithUI extends GUIState {
           public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
             if (object instanceof Ape) {
               scale = (double) ((Ape) object).getPopulation() / (double) (Settings.maxPopulation);
+              // give unique border to each group for identifying purpose
               paint =
                   new Color(
                       255 - (object.hashCode() % 200),
                       255 - (object.hashCode() % 201),
                       255 - (object.hashCode() % 202));
-              innerPaint = Color.green;
+
+              // Red = Contains infected, Green = Fully immune, Orange = Susceptible
+              if (((Ape) object).infectedCount > 0) {
+                innerPaint = Color.red;
+              } else if (((Ape) object).getPopulation() == ((Ape) object).getRecovered()) {
+                innerPaint = Color.green;
+              } else {
+                innerPaint = Color.orange;
+              }
             }
 
             super.draw(object, graphics, info);
@@ -167,6 +178,7 @@ public class ApesWithUI extends GUIState {
               if (!((FoodSource) object).visible && Settings.hideUnusedFoodSources) return;
               if (!((FoodSource) object).visitedByChimpanzees) {
                 if (Settings.enableHeatMap) {
+                  // Paint of the foodSource depends on heat (traffic) on the til
                   paint =
                       new Color(
                           (int) ((FoodSource) object).getHeat(),
@@ -174,7 +186,14 @@ public class ApesWithUI extends GUIState {
                           255 - (int) ((FoodSource) object).getHeat());
                 } else paint = new Color(67, 162, 202);
               } else {
-                paint = new Color(237, 192, 28);
+                // If the food source has infected a group in the current step draw red
+                if (((FoodSource) object).infectedInCurrentStep) {
+                  paint = Color.red;
+                }
+                // Else make food source blue
+                else {
+                  paint = new Color(237, 192, 28);
+                }
               }
             }
             super.draw(object, graphics, info);

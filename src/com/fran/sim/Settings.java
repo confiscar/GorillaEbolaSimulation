@@ -29,6 +29,17 @@ public class Settings {
   public static double chimpanzeeEncounter = 0.01;
   /** Time that the effects of the chimpanzees linger */
   public static int chimpanzeeLingerTime = 7;
+  /**
+   * Rate at which the probability of chimpanzee infections increases when in contact with a
+   * infected gorilla group
+   */
+  public static double chimpanzeeInfectionProbabilityRate = 0.0;
+  /** Probability of transmission between a single gorilla to a single gorilla */
+  public static double transmissionProbability = 0.5;
+  /** Probability of a gorilla recovering after getting the virus */
+  public static double recoveryProbability = 0.5;
+  /** Time to recover or die from disease. Measured as n * gorillaFoodWaitTime */
+  public static int infectionTime = 2;
 
   /** Hides unvisited food sources */
   public static boolean hideUnusedFoodSources = true;

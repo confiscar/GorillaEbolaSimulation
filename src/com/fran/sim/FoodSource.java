@@ -11,13 +11,18 @@ public class FoodSource implements Steppable {
   boolean visible;
   /** True if lingering effects of chimpanzees on food source */
   boolean visitedByChimpanzees;
-  /** */
+  /** Boolean that represents if the food source has infected someone in the current step */
+  boolean infectedInCurrentStep;
+  /** Amount of days needed to pass for the next possible chimpanzee visit */
   private int visitedCounter;
+  /** Probability of a visited tile to pass on an infection */
+  static double infectionProbability = 0.0;
+  /** Amount of days that the effect of chimpanzees at a food source lasts */
+  private int lingerCounter;
   /** Represents how much activity has occurred on food source */
   private double heat;
 
-  private int lingerCounter;
-
+  /** Java Bean to display the heat of the tile (roughly signifies traffic in the tile) */
   double getHeat() {
     return heat;
   }
@@ -29,19 +34,13 @@ public class FoodSource implements Steppable {
     this.heat = 0.0;
     this.visitedCounter = Settings.gorillaFoodWaitTime;
     this.lingerCounter = Settings.chimpanzeeLingerTime;
-  }
-
-  void incrementHeat() {
-    heat += 0.2;
-    if (heat > 255) heat = 255;
-  }
-
-  void setVisible() {
-    this.visible = true;
+    this.infectedInCurrentStep = false;
   }
 
   @Override
   public void step(SimState simState) {
+    infectedInCurrentStep = false;
+
     if (visitedByChimpanzees) {
       lingerCounter--;
       if (lingerCounter <= 0) {
@@ -56,5 +55,24 @@ public class FoodSource implements Steppable {
         visitedCounter = Settings.gorillaFoodWaitTime;
       }
     }
+  }
+
+  /** Augments the infection probability when an infected gorilla group is on the tile */
+  void incrementInfectionProbability() {
+    if (infectionProbability < 1.0) {
+      infectionProbability += Settings.chimpanzeeInfectionProbabilityRate;
+      if (infectionProbability > 1.0) infectionProbability = 1.0;
+    }
+  }
+
+  /** Augments the heat variable when a gorilla group is on the tile */
+  void incrementHeat() {
+    heat += 0.2;
+    if (heat > 255) heat = 255;
+  }
+
+  /** Used in map generation to hide any food sources that cannot be reached */
+  void setVisible() {
+    this.visible = true;
   }
 }

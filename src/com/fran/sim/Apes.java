@@ -29,7 +29,7 @@ public class Apes extends SimState {
   Network interactions = new Network(false);
   /** Aids the generation of ape groups. Used to shuffle food sources and assign to ape group */
   private Bag foodSources = new Bag(Settings.amountFoodSources);
-
+  /** Object gorilla group interactions into a file*/
   public RecordPrinter recordPrinter = new RecordPrinter();
 
   /** Constructor that takes in seed and feeds in to super SimState constructor */
@@ -138,11 +138,17 @@ public class Apes extends SimState {
     System.out.println("Gorilla Density per m^2 : " + gorillaDensity);
   }
 
+  /**Function called on setup to randomly place infections around the board.
+   * @param numberOfInitialInfections number of initial infections for the simulation*/
   public void indexCase(int numberOfInitialInfections) {
+    //TODO Ensure that each infection placement is unique
     Stream<Object> stream = habitat.getAllObjects().stream();
     Bag apes = new Bag();
     apes.addAll(stream.filter(obj -> obj instanceof Ape).collect(Collectors.toList()));
     Ape ape = (Ape) apes.get(random.nextInt(apes.size()));
+    ape.susceptibleCount--;
+    ape.infectedCount++;
+    ape.infectionTimer.add(Settings.infectionTime);
   }
 
   public static void main(String[] args) {
