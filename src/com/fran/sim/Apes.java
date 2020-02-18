@@ -1,11 +1,16 @@
 package com.fran.sim;
 
 import com.fran.util.RecordPrinter;
+import com.fran.util.ShellHandler;
+import picocli.CommandLine;
 import sim.engine.SimState;
 import sim.field.grid.SparseGrid2D;
 import sim.util.Bag;
 import sim.util.Int2D;
 import sim.field.network.*;
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Apes is the subclass implementation of the SimState module. This class will take care of the
@@ -56,6 +61,8 @@ public class Apes extends SimState {
     /*Initialize food and apes*/
     initializeFoodSource();
     initializeApeGroups();
+
+    indexCase(1);
   }
   /**
    * Initializes food sources by randomly clustering them around the centre. The
@@ -127,12 +134,28 @@ public class Apes extends SimState {
 
     double gorillaDensity =
         (double) Settings.groupsOfGorillas
-            / (Math.pow((2 * Settings.foodSpreadingIntensity) + 1, 2)
-                * Settings.cellSideLength);
+            / (Math.pow((2 * Settings.foodSpreadingIntensity) + 1, 2) * Settings.cellSideLength);
     System.out.println("Gorilla Density per m^2 : " + gorillaDensity);
   }
 
+  public void indexCase(int numberOfInitialInfections) {
+    Stream<Object> stream = habitat.getAllObjects().stream();
+    Bag apes = new Bag();
+    apes.addAll(stream.filter(obj -> obj instanceof Ape).collect(Collectors.toList()));
+    Ape ape = (Ape) apes.get(random.nextInt(apes.size()));
+  }
+
   public static void main(String[] args) {
+    ShellHandler shellHandler = new ShellHandler();
+    CommandLine cl = new CommandLine(shellHandler);
+    cl.parseArgs(args);
+    if (cl.isUsageHelpRequested()) {
+      CommandLine.usage(shellHandler, System.out);
+      return;
+    }
+
+    shellHandler.handleInputs();
+
     /* doLoop steps:
     Create instance of SimState subclass and initialize random number generator ->
     Call start() from your subclass ->

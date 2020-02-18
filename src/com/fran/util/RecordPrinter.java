@@ -24,7 +24,8 @@ public class RecordPrinter {
   }
 
   public void addInteractionApe(Ape ape1, Ape ape2) {
-    interactionRecords.add(Integer.toHexString(ape1.hashCode()) + " " + Integer.toHexString(ape2.hashCode()));
+    interactionRecords.add(
+        Integer.toHexString(ape1.hashCode()) + " " + Integer.toHexString(ape2.hashCode()));
   }
 
   public void printToFile() throws IOException {
@@ -35,6 +36,6 @@ public class RecordPrinter {
         writer.newLine();
       }
       writer.close();
-      }
+    }
   }
 }

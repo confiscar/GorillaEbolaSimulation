@@ -18,8 +18,8 @@ public class FranConsole extends Console {
   @Override
   public void pressStop() {
     try {
-        ((Apes)apesUI.state).recordPrinter.printToFile();
-        ((Apes)apesUI.state).recordPrinter.reset();
+      ((Apes) apesUI.state).recordPrinter.printToFile();
+      ((Apes) apesUI.state).recordPrinter.reset();
     } catch (IOException e) {
       e.printStackTrace();
     }

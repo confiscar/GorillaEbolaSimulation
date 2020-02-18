@@ -8,6 +8,7 @@ import sim.field.network.Edge;
 import sim.util.Bag;
 import sim.util.Int2D;
 
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -21,20 +22,42 @@ public class Ape implements Steppable {
 
   private Bag neighbourFoodSources;
   private Bag memoryFoodSources;
-  private int populationCount;
-  private int femaleCount;
-  private int maleCount;
   private int movementCounter;
 
-  /** Java Bean to display population*/
+  /** Integers representing the quantity of the gorillas (total, male, female) */
+  private int populationCount;
+  /** Integers representing the quantity of female gorillas (total, male, female) */
+  private int femaleCount;
+  /** Integers representing the quantity of male gorillas (total, male, female) */
+  private int maleCount;
+
+  private int susceptibleCount;
+  private int infectedCount;
+  private int recoveredCount;
+  private int deceasedCount;
+
+  private boolean hasSilverbackDied;
+
+  /**
+   * The statesMale tracks the current state in the SIR model of each male.
+   * As a convention the 0 index in the statesMale list is the current status of the silver back
+   * gorilla
+   */
+  public List<Integer> statesMale;
+  /**
+   * The statesFemale tracks the current state in the SIR model of each female.
+   */
+  public List<Integer> statesFemale;
+
+  /** Java Bean to display population */
   public int getPopulation() {
     return this.populationCount;
   }
-  /** Java Bean to display male apes*/
+  /** Java Bean to display male apes */
   public int getMales() {
     return this.maleCount;
   }
-  /** Java Bean to display females apes*/
+  /** Java Bean to display females apes */
   public int getFemales() {
     return this.femaleCount;
   }
@@ -45,13 +68,16 @@ public class Ape implements Steppable {
    */
   Ape(SimState simState, Int2D centerHomeRange) {
     Apes apes = (Apes) simState;
+    hasSilverbackDied = false;
 
     /*Creates bags that will contain locations of neighbouring food sources (one is for the memory)*/
     this.neighbourFoodSources = new Bag();
     this.memoryFoodSources = new Bag(Settings.gorillaMemoryLength);
+
     /*This will be the 'timer' for specific gorilla behaviour*/
     movementCounter = Settings.gorillaFoodWaitTime;
 
+    /*Calculates population between set boundaries and corresponding gender divisions*/
     populationCount =
         apes.random.nextInt(Settings.maxPopulation - Settings.minPopulation)
             + Settings.minPopulation;
@@ -69,11 +95,20 @@ public class Ape implements Steppable {
 
     /*Filters the objects to just get the food sources*/
     Stream<Object> stream = allNeighbours.stream();
-    neighbourFoodSources.addAll(stream.filter(obj -> obj instanceof FoodSource).collect(Collectors.toList()));
-    neighbourFoodSources.forEach(obj -> ((FoodSource)obj).setVisible());
+    neighbourFoodSources.addAll(
+        stream.filter(obj -> obj instanceof FoodSource).collect(Collectors.toList()));
+    neighbourFoodSources.forEach(obj -> ((FoodSource) obj).setVisible());
 
     stream = neighbourFoodSources.stream();
-    memoryFoodSources.addAll(stream.filter(obj -> ((FoodSource)obj).location == centerHomeRange).collect(Collectors.toList()));
+    memoryFoodSources.addAll(
+        stream
+            .filter(obj -> ((FoodSource) obj).location == centerHomeRange)
+            .collect(Collectors.toList()));
+
+    susceptibleCount = populationCount;
+    infectedCount = 0;
+    recoveredCount = 0;
+    deceasedCount = 0;
   }
 
   /**
@@ -158,7 +193,7 @@ public class Ape implements Steppable {
       }
     }
 
-    if(probabilities.isEmpty()){
+    if (probabilities.isEmpty()) {
       memoryFoodSources = new Bag();
       return getNewFoodSource(simState);
     }
@@ -190,10 +225,9 @@ public class Ape implements Steppable {
       }
     }
     FoodSource returnFs = (FoodSource) ((Pair) normalisedProbabilities.get(index)).getKey();
-    if(memoryFoodSources.size() >= Settings.gorillaMemoryLength)
+    if (memoryFoodSources.size() >= Settings.gorillaMemoryLength)
       memoryFoodSources.removeNondestructively(0);
     memoryFoodSources.add(returnFs);
-
 
     returnFs.incrementHeat();
     return returnFs;
@@ -205,4 +239,5 @@ public class Ape implements Steppable {
         Math.sqrt(Math.pow(foodSourceX - gorillaX, 2) + Math.pow(foodSourceY - gorillaY, 2));
     return 1 / distance;
   }
+
 }

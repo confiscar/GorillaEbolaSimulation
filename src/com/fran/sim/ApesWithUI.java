@@ -2,8 +2,6 @@ package com.fran.sim;
 
 import com.fran.util.BorderedOvalPortrayal2D;
 import com.fran.util.FranConsole;
-import com.fran.util.RecordPrinter;
-import sim.display.Console;
 import sim.display.Controller;
 import sim.display.Display2D;
 import sim.display.GUIState;
@@ -17,7 +15,6 @@ import sim.portrayal.network.SimpleEdgePortrayal2D;
 import sim.portrayal.network.SpatialNetwork2D;
 import sim.portrayal.simple.RectanglePortrayal2D;
 import sim.util.Bag;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.Comparator;
@@ -40,13 +37,12 @@ public class ApesWithUI extends GUIState {
   /** The frame that will encapsulate the display */
   private JFrame displayFrame;
 
-  public ApesWithUI() {
-    super(new Apes(System.currentTimeMillis()));
-  }
-
-  /** @param state SimState class used for adding portrayals to frame */
   public ApesWithUI(SimState state) {
     super(state);
+  }
+
+  public ApesWithUI() {
+    super(new Apes(System.currentTimeMillis()));
   }
 
   /** Called when the play button is pressed, just before SimState.start() is called. */
