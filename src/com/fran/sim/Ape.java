@@ -24,6 +24,8 @@ public class Ape implements Steppable {
   private Bag neighbourFoodSources;
   private Bag memoryFoodSources;
   private int movementCounter;
+  private int silverbackNumber;
+  private int silverbackCounter;
 
   /** Integers representing the quantity of the gorillas (total, male, female) */
   private int populationCount;
@@ -120,6 +122,9 @@ public class Ape implements Steppable {
     infectedCount = 0;
     recoveredCount = 0;
     deceasedCount = 0;
+
+    silverbackNumber = simState.random.nextInt(populationCount);
+    silverbackCounter = silverbackNumber;
   }
 
   /**
@@ -136,7 +141,7 @@ public class Ape implements Steppable {
       movementCounter--;
 
       /*If movementCounter runs out, search for new food source*/
-      if (movementCounter <= 0 && neighbourFoodSources.size() > 1) {
+      if (movementCounter <= 0) {
         /*Reset movement counter*/
         movementCounter = Settings.gorillaFoodWaitTime;
         /*Get new food source*/
@@ -145,7 +150,7 @@ public class Ape implements Steppable {
         infect(simState, infectedCount, Settings.transmissionProbability);
 
         if (fs.visitedByChimpanzees) {
-          if(infect(simState, 1, FoodSource.infectionProbability) > 0){
+          if (infect(simState, 1, FoodSource.infectionProbability) > 0) {
             fs.infectedInCurrentStep = true;
             System.out.print(FoodSource.infectionProbability);
           }
@@ -154,6 +159,10 @@ public class Ape implements Steppable {
 
         decreaseInfectionTimer(infectionTimer);
         checkForDeaths(simState, infectionTimer);
+
+        if (hasSilverbackDied) {
+          disperse(simState);
+        }
 
         /*Updates the network of interactions*/
         updateNetwork(simState);
@@ -208,6 +217,10 @@ public class Ape implements Steppable {
     /*Get static simState instance and cast as our subclass to get functions and member vars*/
     Apes apes = (Apes) simState;
     SparseGrid2D habitat = apes.habitat;
+
+    if (neighbourFoodSources.size() <= 1) {
+      return (FoodSource) neighbourFoodSources.get(0);
+    }
 
     /*Create a bag with FoodSource, Probability value pairs*/
     Bag probabilities = new Bag(neighbourFoodSources.size());
@@ -268,10 +281,8 @@ public class Ape implements Steppable {
     return returnFs;
   }
 
-  private double calculateProbabilityDistance(
-      double gorillaX, double gorillaY, double foodSourceX, double foodSourceY) {
-    double distance =
-        Math.sqrt(Math.pow(foodSourceX - gorillaX, 2) + Math.pow(foodSourceY - gorillaY, 2));
+  private double calculateProbabilityDistance(double x1, double y1, double x2, double y2) {
+    double distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
     return 1 / distance;
   }
 
@@ -300,6 +311,10 @@ public class Ape implements Steppable {
       } else {
         populationCount--;
         deceasedCount++;
+        silverbackCounter--;
+        if (silverbackCounter == 0) {
+          hasSilverbackDied = true;
+        }
       }
     }
   }
@@ -309,6 +324,85 @@ public class Ape implements Steppable {
       int originalValue = infections.get(i);
       infections.set(i, originalValue - 1);
     }
+  }
+
+  private boolean disperse(SimState state) {
+    /*Get static simState instance and cast as our subclass to get functions and member vars*/
+    Apes apes = (Apes) state;
+    SparseGrid2D habitat = apes.habitat;
+
+    Bag allObjects = habitat.getAllObjects();
+    Bag currentApesProbabilities = new Bag(allObjects.size());
+    Int2D me = habitat.getObjectLocation(this);
+    double sum = 0;
+
+    for (int i = 0; i < allObjects.size(); i++) {
+      Object obj = allObjects.get(i);
+      if (obj != this && obj instanceof Ape && !((Ape) obj).groupInactive) {
+        Int2D objLocation = habitat.getObjectLocation(obj);
+        double probability = calculateProbabilityDistance(me.x, me.y, objLocation.x, objLocation.y);
+        currentApesProbabilities.add(new Pair<>(obj, probability));
+        sum += probability;
+      }
+    }
+
+    if (currentApesProbabilities.isEmpty()) {
+      return false;
+    }
+
+    /*Create a bag with FoodSource, Probability value pairs*/
+    Bag normalisedProbabilities = new Bag(neighbourFoodSources.size());
+    int size = currentApesProbabilities.size();
+    for (int i = 0; i < size; i++) {
+      Object obj = currentApesProbabilities.pop();
+      if (obj instanceof Pair) {
+        Ape ape = (Ape) ((Pair) obj).getKey();
+        Double value = (Double) ((Pair) obj).getValue() / sum;
+        normalisedProbabilities.add(new Pair<>(ape, value));
+      }
+    }
+
+    Bag apeOrder = new Bag();
+
+    for (int i = 0; i < populationCount; i++) {
+      /*Find the correct index according to probabilities*/
+      double randomDouble = apes.random.nextDouble();
+      double choose = 0;
+      int index = 0;
+
+      for (int j = 0; j < normalisedProbabilities.size(); j++) {
+        Object obj = normalisedProbabilities.get(j);
+        if (obj instanceof Pair) {
+          choose += (double) ((Pair) obj).getValue();
+          if (randomDouble < choose) {
+            index = j;
+            apeOrder.add(index);
+            break;
+          }
+        }
+      }
+    }
+
+    //TODO Probability of dispersing set at a ceratin percentage
+
+    for (int i = 0; i < apeOrder.size(); i++) {
+        Ape ape = (Ape) ((Pair) normalisedProbabilities.get((int) apeOrder.get(i))).getKey();
+        populationCount--;
+        ape.populationCount++;
+        if (susceptibleCount != 0) {
+          ape.susceptibleCount++;
+          susceptibleCount--;
+        } else if(infectedCount != 0) {
+          ape.infectedCount++;
+          ape.infectionTimer.add(this.infectionTimer.remove(0));
+          infectedCount--;
+        } else {
+          ape.recoveredCount++;
+          recoveredCount--;
+        }
+    }
+
+    return true;
   }
 
   private boolean randomChoose(SimState state, double probability) {

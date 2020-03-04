@@ -120,6 +120,8 @@ public class Apes extends SimState {
     Bag foodSourceLocations = new Bag(foodSources);
     foodSourceLocations.shuffle(random);
 
+    int sumOfGorillaPopulation = 0;
+
     /*Loop creates n amount of groups*/
     for (int i = 0; i < Settings.groupsOfGorillas; i++) {
       /*Pops random food source and sets Apes initial location to it*/
@@ -130,12 +132,15 @@ public class Apes extends SimState {
       interactions.addNode(ape);
       /*Adds each agent to the scheduler* to be stepped*/
       schedule.scheduleRepeating(ape);
+
+      sumOfGorillaPopulation += ape.getPopulation();
     }
 
     double gorillaDensity =
-        (double) Settings.groupsOfGorillas
-            / (Math.pow((2 * Settings.foodSpreadingIntensity) + 1, 2) * Settings.cellSideLength);
-    System.out.println("Gorilla Density per m^2 : " + gorillaDensity);
+            (double) sumOfGorillaPopulation
+            / Math.pow((double)(((2 * Settings.foodSpreadingIntensity) + 1) * Settings.cellSideLength) / 1000,2);
+
+    System.out.println("Gorilla Density per km^2 : " + gorillaDensity);
   }
 
   /**Function called on setup to randomly place infections around the board.

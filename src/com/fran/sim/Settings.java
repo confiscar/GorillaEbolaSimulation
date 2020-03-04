@@ -10,9 +10,9 @@ public class Settings {
   /** Amount of groups of gorillas in the habitat */
   public static int groupsOfGorillas = 100;
   /** Amount of food sources in grid boundary */
-  public static int amountFoodSources = 1000;
+  public static int amountFoodSources = 150;
   /** Defines a (2*n + 1)^2 area where the food can be placed */
-  public static int foodSpreadingIntensity = 30;
+  public static int foodSpreadingIntensity = 15;
   /** Maximum quantity of gorillas per group */
   public static int maxPopulation = 17;
   /** Minimum quantity of gorillas per group */
@@ -35,11 +35,13 @@ public class Settings {
    */
   public static double chimpanzeeInfectionProbabilityRate = 0.0;
   /** Probability of transmission between a single gorilla to a single gorilla */
-  public static double transmissionProbability = 0.5;
+  public static double transmissionProbability = 0.2;
   /** Probability of a gorilla recovering after getting the virus */
   public static double recoveryProbability = 0.5;
   /** Time to recover or die from disease. Measured as n * gorillaFoodWaitTime */
-  public static int infectionTime = 2;
+  public static int infectionTime = 3;
+
+  public static double probabilityOfDispersal = 0.2;
 
   /** Hides unvisited food sources */
   public static boolean hideUnusedFoodSources = true;
