@@ -32,7 +32,14 @@ public class FoodSource implements Steppable {
     this.visible = false;
     this.visitedByChimpanzees = false;
     this.heat = 0.0;
-    this.visitedCounter = SimParameters.gorillaFoodWaitTime;
+    //TODO Fix this hack
+    //The visited counter is set to gorillaFoodWaitTime - 1 due to a unflexible approach with the scheduler
+    //Mason has. Scheduler does not have priority (there exists substeps but I couldn't find where it was),
+    //so it will step through food sources and Apes in random order. This means chimpanzees can have 100 percent
+    //change at appearing, but wont affect the ape that is on it because the Ape was scheduled to move first.
+    //Only way of resolving this is keeping the food sources updated a step before the apes, or use substeps in the
+    //latest versions of Mason. This will do for now, but the time gorillas wait to move has to be set > 2.
+    this.visitedCounter = SimParameters.gorillaFoodWaitTime-1;
     this.lingerCounter = SimParameters.chimpanzeeLingerTime;
     this.infectedInCurrentStep = false;
     this.infectionProbability = SimParameters.transmissionProbability;

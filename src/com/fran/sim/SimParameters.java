@@ -20,7 +20,7 @@ public class SimParameters {
   /** Timer to delete an item off a gorillas memory */
   public static int gorillaMemoryLength = 3;
   /** Chance of encountering a chimpanzee on a tile */
-  public static double chimpanzeeEncounter = 0.001;
+  public static double chimpanzeeEncounter = 0.0;
   /** Time that the effects of the chimpanzees linger */
   public static int chimpanzeeLingerTime = 7;
   /** Rate of increase of the chimpanzee probability after every infected gorilla */
@@ -32,5 +32,5 @@ public class SimParameters {
   /** Time to recover or die from disease. Measured as n * gorillaFoodWaitTime */
   public static int infectionTime = 3;
   /** Probability that when the silverback dies, an individual gorilla will move to another group */
-  public static double probabilityOfDispersal = 0.7;
+  public static double probabilityOfDispersal = 0.5;
 }
