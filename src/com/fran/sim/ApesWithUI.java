@@ -146,7 +146,7 @@ public class ApesWithUI extends GUIState {
           @Override
           public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
             if (object instanceof Ape) {
-              scale = (double) ((Ape) object).getPopulation() / (double) (Settings.maxPopulation);
+              scale = (double) ((Ape) object).getPopulation() / (double) (SimParameters.maxPopulation);
               // give unique border to each group for identifying purpose
               paint =
                   new Color(
@@ -175,9 +175,9 @@ public class ApesWithUI extends GUIState {
           @Override
           public void draw(Object object, Graphics2D graphics, DrawInfo2D info) {
             if (object instanceof FoodSource) {
-              if (!((FoodSource) object).visible && Settings.hideUnusedFoodSources) return;
+              if (!((FoodSource) object).visible && SimSettings.hideUnusedFoodSources) return;
               if (!((FoodSource) object).visitedByChimpanzees) {
-                if (Settings.enableHeatMap) {
+                if (SimSettings.enableHeatMap) {
                   // Paint of the foodSource depends on heat (traffic) on the til
                   paint =
                       new Color(
@@ -232,6 +232,7 @@ public class ApesWithUI extends GUIState {
   }
 
   public static void main(String[] args) {
+    SimSettings.useSimlab = false;
     ApesWithUI vid = new ApesWithUI();
     FranConsole c = new FranConsole(vid);
     c.setVisible(true);

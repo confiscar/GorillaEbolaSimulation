@@ -1,6 +1,6 @@
 package com.fran.util;
 
-import com.fran.sim.Settings;
+import com.fran.sim.SimParameters;
 
 public class Stats {
 
@@ -17,9 +17,9 @@ public class Stats {
   public Stats() {
     this.totalInitialPopulation = 0;
     this.gorillaDensity = 0;
-    this.totalInitialGroups = Settings.groupsOfGorillas;
-    this.totalFoodSources = Settings.amountFoodSources;
-    this.foodSpreadArea = Settings.amountFoodSources;
+    this.totalInitialGroups = SimParameters.groupsOfGorillas;
+    this.totalFoodSources = SimParameters.amountFoodSources;
+    this.foodSpreadArea = SimParameters.amountFoodSources;
     this.totalInfectedGorillas = 0;
     this.totalRecoveredGorillas = 0;
     this.totalDeceasedGorillas = 0;
@@ -39,7 +39,7 @@ public class Stats {
     this.gorillaDensity =
         (double) totalInitialPopulation
             / Math.pow(
-                (double) (((2 * Settings.foodSpreadingIntensity) + 1) * Settings.cellSideLength)
+                (double) (((2 * SimParameters.foodSpreadingIntensity) + 1) * SimParameters.cellSideLength)
                     / 1000,
                 2);
   }

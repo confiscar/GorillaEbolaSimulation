@@ -3,7 +3,6 @@ package com.fran.sim;
 import javafx.util.Pair;
 import sim.engine.SimState;
 import sim.engine.Steppable;
-import sim.engine.Stoppable;
 import sim.field.grid.SparseGrid2D;
 import sim.field.network.Edge;
 import sim.util.Bag;
@@ -73,22 +72,22 @@ public class Ape implements Steppable {
 
     /*Creates bags that will contain locations of neighbouring food sources (one is for the memory)*/
     this.neighbourFoodSources = new Bag();
-    this.memoryFoodSources = new Bag(Settings.gorillaMemoryLength);
+    this.memoryFoodSources = new Bag(SimParameters.gorillaMemoryLength);
 
     /*This will be the 'timer' for specific gorilla behaviour*/
-    movementCounter = Settings.gorillaFoodWaitTime;
+    movementCounter = SimParameters.gorillaFoodWaitTime;
 
     /*Calculates population between set boundaries*/
     populationCount =
-        apes.random.nextInt(Settings.maxPopulation - Settings.minPopulation)
-            + Settings.minPopulation;
+        apes.random.nextInt(SimParameters.maxPopulation - SimParameters.minPopulation)
+            + SimParameters.minPopulation;
 
     /*Gets the moore neighbours (circle around the gorillas) */
     Bag allNeighbours =
         apes.habitat.getMooreNeighbors(
             centerHomeRange.x,
             centerHomeRange.y,
-            Settings.homerangeRadius,
+            SimParameters.homerangeRadius,
             SparseGrid2D.BOUNDED,
             true);
 
@@ -129,16 +128,16 @@ public class Ape implements Steppable {
       /*If movementCounter runs out, search for new food source*/
       if (movementCounter <= 0) {
         /*Reset movement counter*/
-        movementCounter = Settings.gorillaFoodWaitTime;
+        movementCounter = SimParameters.gorillaFoodWaitTime;
         /*Get new food source*/
         FoodSource fs = getNewFoodSource(simState);
         habitat.setObjectLocation(this, fs.location);
-        infect(simState, infectedCount, Settings.transmissionProbability);
+        infect(simState, infectedCount, SimParameters.transmissionProbability);
 
         if (fs.visitedByChimpanzees) {
-          if (infect(simState, 1, FoodSource.infectionProbability) > 0) {
+          if (infect(simState, 1, fs.infectionProbability) > 0) {
             fs.infectedInCurrentStep = true;
-            System.out.print(FoodSource.infectionProbability);
+            //System.out.print(FoodSource.infectionProbability);
           }
           fs.incrementInfectionProbability();
         }
@@ -185,8 +184,8 @@ public class Ape implements Steppable {
       if (obj instanceof Ape && obj != this) {
 
         int originalApeInfection = ((Ape) obj).infectedCount;
-        ((Ape) obj).infect(simState, infectedCount, Settings.transmissionProbability);
-        this.infect(simState, originalApeInfection, Settings.transmissionProbability);
+        ((Ape) obj).infect(simState, infectedCount, SimParameters.transmissionProbability);
+        this.infect(simState, originalApeInfection, SimParameters.transmissionProbability);
 
         /*If the edge doesn't exist, create it*/
         if (apes.interactions.getEdge(this, obj) == null) {
@@ -264,7 +263,7 @@ public class Ape implements Steppable {
       }
     }
     FoodSource returnFs = (FoodSource) ((Pair) normalisedProbabilities.get(index)).getKey();
-    if (memoryFoodSources.size() >= Settings.gorillaMemoryLength)
+    if (memoryFoodSources.size() >= SimParameters.gorillaMemoryLength)
       memoryFoodSources.removeNondestructively(0);
     memoryFoodSources.add(returnFs);
 
@@ -285,7 +284,7 @@ public class Ape implements Steppable {
         if (randomChoose(state, transmissionProbability)) {
           susceptibleCount--;
           infectedCount++;
-          infectionTimer.add(Settings.infectionTime);
+          infectionTimer.add(SimParameters.infectionTime);
           infected++;
           ((Apes) state).stat.incrementTotalInfectedGorillas();
         }
@@ -298,7 +297,7 @@ public class Ape implements Steppable {
   private void checkForDeaths(SimState state, List<Integer> infections) {
     while (infections.remove(Integer.valueOf(0))) {
       infectedCount--;
-      if (randomChoose(state, Settings.recoveryProbability)) {
+      if (randomChoose(state, SimParameters.recoveryProbability)) {
         recoveredCount++;
         ((Apes) state).stat.incrementTotalRecoveredGorillas();
       } else {
@@ -333,7 +332,7 @@ public class Ape implements Steppable {
     for (int i = 0; i < allObjects.size(); i++) {
       Object obj = allObjects.get(i);
       //If the object is an ape, not inactive and the probability of dispersal returns true
-      if (obj != this && obj instanceof Ape && !((Ape) obj).groupInactive && randomChoose(state, Settings.probabilityOfDispersal)) {
+      if (obj != this && obj instanceof Ape && !((Ape) obj).groupInactive && randomChoose(state, SimParameters.probabilityOfDispersal)) {
         Int2D objLocation = habitat.getObjectLocation(obj);
         double probability = calculateProbabilityDistance(me.x, me.y, objLocation.x, objLocation.y);
         currentApesProbabilities.add(new Pair<>(obj, probability));

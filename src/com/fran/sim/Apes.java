@@ -3,7 +3,6 @@ package com.fran.sim;
 import com.fran.util.IOHandler;
 import com.fran.util.RecordPrinter;
 import com.fran.util.Stats;
-import com.lowagie.text.Paragraph;
 import sim.engine.SimState;
 import sim.field.grid.SparseGrid2D;
 import sim.util.Bag;
@@ -24,15 +23,15 @@ import java.util.stream.Stream;
  */
 public class Apes extends SimState {
   /** How big the y axis of the simulation will be */
-  private static final int simulationWidth = (Settings.foodSpreadingIntensity * 3);
+  private static final int simulationWidth = (SimParameters.foodSpreadingIntensity * 3);
   /** How big the x axis of the simulation will be */
-  private static final int simulationHeight = (Settings.foodSpreadingIntensity * 3);
+  private static final int simulationHeight = (SimParameters.foodSpreadingIntensity * 3);
   /** Habitat represents the living space that the apes inhabit. */
   SparseGrid2D habitat = new SparseGrid2D(simulationWidth, simulationHeight);
   /** Network that represents the interactions between the apes */
   Network interactions = new Network(false);
   /** Aids the generation of ape groups. Used to shuffle food sources and assign to ape group */
-  private Bag foodSources = new Bag(Settings.amountFoodSources);
+  private Bag foodSources = new Bag(SimParameters.amountFoodSources);
   /** Object gorilla group interactions into a file */
   public RecordPrinter recordPrinter = new RecordPrinter();
 
@@ -64,18 +63,7 @@ public class Apes extends SimState {
     interactions.clear();
     foodSources.clear();
 
-    if (Settings.useSimlab) {
-      ArrayList<Double> list = IOHandler.factors.get(IOHandler.counter);
-      Settings.foodSpreadingIntensity = (int) Math.round(list.get(0));
-      Settings.transmissionProbability = list.get(1);
-      Settings.recoveryProbability = list.get(2);
-    }
-    /*System.out.println(
-    Settings.foodSpreadingIntensity
-        + " "
-        + Settings.transmissionProbability
-        + " "
-        + Settings.recoveryProbability);*/
+    SimSettings.setFactors();
 
     /*Initialize food and apes*/
     initializeFoodSource();
@@ -91,22 +79,22 @@ public class Apes extends SimState {
   private void initializeFoodSource() {
 
     /*Basic error checking to see if all food sources can be placed*/
-    int areaOfFoodSpread = (int) Math.pow((Settings.foodSpreadingIntensity * 2) + 1, 2);
-    if (Settings.amountFoodSources > areaOfFoodSpread) {
+    int areaOfFoodSpread = (int) Math.pow((SimParameters.foodSpreadingIntensity * 2) + 1, 2);
+    if (SimParameters.amountFoodSources > areaOfFoodSpread) {
       System.out.println(
           "Settings Error: Amount of food sources bigger than possible area to place them.");
       System.exit(-1);
     }
 
     /*Creates n amount of food sources*/
-    for (int i = 0; i < Settings.amountFoodSources; i++) {
+    for (int i = 0; i < SimParameters.amountFoodSources; i++) {
       int x, y;
       /*Keeps looping until find two unique pairs of x and y for the food source*/
       do {
         int centreX = simulationWidth / 2;
         int centreY = simulationHeight / 2;
-        x = centreX + (random.nextInt() % (Settings.foodSpreadingIntensity + 1));
-        y = centreY + (random.nextInt() % (Settings.foodSpreadingIntensity + 1));
+        x = centreX + (random.nextInt() % (SimParameters.foodSpreadingIntensity + 1));
+        y = centreY + (random.nextInt() % (SimParameters.foodSpreadingIntensity + 1));
       } while (x < 0
           || x >= simulationWidth
           || y < 0
@@ -123,10 +111,9 @@ public class Apes extends SimState {
   }
 
   public void finish() {
-    Settings.statsFromRun.add(stat);
+    SimSettings.statsFromRun.add(stat);
 
-    if (Settings.useSimlab) {
-      IOHandler.counter++;
+    if (SimSettings.useSimlab) {
       try {
         IOHandler.write("" + stat.getRatioOfDeceased());
       } catch (IOException e) {
@@ -145,6 +132,7 @@ public class Apes extends SimState {
             + " D "
             + stat.getTotalDeceasedGorillas());
     System.out.println("Ratio: " + stat.getRatioOfDeceased());*/
+
     super.finish();
   }
 
@@ -155,7 +143,7 @@ public class Apes extends SimState {
   private void initializeApeGroups() {
     /*Throws an error if more gorillas then food sources. This is problem due to not being able to assign all
     gorilla groups a unique food source*/
-    if (Settings.groupsOfGorillas > Settings.amountFoodSources) {
+    if (SimParameters.groupsOfGorillas > SimParameters.amountFoodSources) {
       System.out.println(
           "Settings Error: Amount of gorilla groups can't be larger than amount of food sources.");
       System.exit(-2);
@@ -168,7 +156,7 @@ public class Apes extends SimState {
     int sumOfGorillaPopulation = 0;
 
     /*Loop creates n amount of groups*/
-    for (int i = 0; i < Settings.groupsOfGorillas; i++) {
+    for (int i = 0; i < SimParameters.groupsOfGorillas; i++) {
       /*Pops random food source and sets Apes initial location to it*/
       FoodSource fs = (FoodSource) foodSourceLocations.pop();
       Ape ape = new Ape(this, fs.location);
@@ -200,7 +188,7 @@ public class Apes extends SimState {
     ape.susceptibleCount--;
     ape.infectedCount++;
     stat.incrementTotalInfectedGorillas();
-    ape.infectionTimer.add(Settings.infectionTime);
+    ape.infectionTimer.add(SimParameters.infectionTime);
   }
 
   public static void main(String[] args) {
@@ -210,11 +198,10 @@ public class Apes extends SimState {
     Repeatedly call step() ->
     When schedule entirely empty of agents call finish() to clean up
      */
-    File input = new File("D:\\Users\\Fran\\Documents\\Modules\\Dissertation\\Simlab\\area-transmission-recovery-50000.sam");
-    File output = new File("D:\\Users\\Fran\\Documents\\Modules\\Dissertation\\Simlab\\outputv1.txt");
+    IOHandler.input = new File(SimSettings.inputFile);
+    IOHandler.output = new File(SimSettings.outputFile);
+    SimSettings.useSimlab = true;
 
-    IOHandler.input = input;
-    IOHandler.output = output;
     try {
       IOHandler.writeHeader();
     } catch (IOException e) {
@@ -228,7 +215,16 @@ public class Apes extends SimState {
       System.exit(-1);
     }
 
-    doLoop(Apes.class, args);
+    String[] parameters = {
+      "-until",
+      "" + SimSettings.numberOfSteps,
+      "-repeat",
+      "" + SimSettings.numberOfRuns,
+      "-seed",
+      "" + SimSettings.seed
+    };
+
+    doLoop(Apes.class, parameters);
 
     /* Since the framework uses threads, exit(0) has to be called, just in case
     you forget to turn your user threads into daemon threads. Daemon threads do not prevent

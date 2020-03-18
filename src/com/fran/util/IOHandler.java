@@ -1,6 +1,6 @@
 package com.fran.util;
 
-import com.fran.sim.Settings;
+import com.fran.sim.SimSettings;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -11,8 +11,7 @@ public class IOHandler {
   public static File output;
   static final int skip = 4;
 
-  public static ArrayList<ArrayList<Double>> factors = new ArrayList<>(Settings.numberOfRuns);
-  public static String[] factorNames = {"DeceasedRatio"};
+  public static ArrayList<ArrayList<Double>> factors = new ArrayList<>(SimSettings.numberOfRuns);
   public static int counter = 0;
 
   static public void writeHeader() throws IOException {
@@ -24,13 +23,13 @@ public class IOHandler {
     BufferedWriter bWriter = new BufferedWriter(fWriter);
     bWriter.write("1");
     bWriter.newLine();
-    for(String s : factorNames){
+    for(String s : SimSettings.outputFactorNames){
       bWriter.write(s);
       bWriter.newLine();
     }
     bWriter.write("time = no");
     bWriter.newLine();
-    bWriter.write("" + Settings.numberOfRuns);
+    bWriter.write("" + SimSettings.numberOfRuns);
     bWriter.newLine();
 
     bWriter.close();
@@ -56,7 +55,7 @@ public class IOHandler {
       line = bReader.readLine();
     }
 
-    for (int i = 0; i < Settings.numberOfRuns; i++) {
+    for (int i = 0; i < SimSettings.numberOfRuns; i++) {
       line = bReader.readLine();
       String[] split = line.split("\t");
       ArrayList<Double> list = new ArrayList<>();
@@ -68,5 +67,9 @@ public class IOHandler {
 
     bReader.close();
     fReader.close();
+  }
+
+  static public ArrayList<Double> getNextRowOfFactors(){
+    return factors.get(counter++);
   }
 }

@@ -16,7 +16,7 @@ public class FoodSource implements Steppable {
   /** Amount of days needed to pass for the next possible chimpanzee visit */
   private int visitedCounter;
   /** Probability of a visited tile to pass on an infection */
-  static double infectionProbability = Settings.transmissionProbability;
+  double infectionProbability;
   /** Amount of days that the effect of chimpanzees at a food source lasts */
   private int lingerCounter;
   /** Represents how much activity has occurred on food source */
@@ -32,9 +32,10 @@ public class FoodSource implements Steppable {
     this.visible = false;
     this.visitedByChimpanzees = false;
     this.heat = 0.0;
-    this.visitedCounter = Settings.gorillaFoodWaitTime;
-    this.lingerCounter = Settings.chimpanzeeLingerTime;
+    this.visitedCounter = SimParameters.gorillaFoodWaitTime;
+    this.lingerCounter = SimParameters.chimpanzeeLingerTime;
     this.infectedInCurrentStep = false;
+    this.infectionProbability = SimParameters.transmissionProbability;
   }
 
   @Override
@@ -45,14 +46,14 @@ public class FoodSource implements Steppable {
       lingerCounter--;
       if (lingerCounter <= 0) {
         visitedByChimpanzees = false;
-        lingerCounter = Settings.chimpanzeeLingerTime;
+        lingerCounter = SimParameters.chimpanzeeLingerTime;
       }
     } else {
       visitedCounter--;
       if (visitedCounter <= 0) {
-        if (simState.random.nextDouble() <= Settings.chimpanzeeEncounter)
+        if (simState.random.nextDouble() <= SimParameters.chimpanzeeEncounter)
           visitedByChimpanzees = true;
-        visitedCounter = Settings.gorillaFoodWaitTime;
+        visitedCounter = SimParameters.gorillaFoodWaitTime;
       }
     }
   }
@@ -60,7 +61,7 @@ public class FoodSource implements Steppable {
   /** Augments the infection probability when an infected gorilla group is on the tile */
   void incrementInfectionProbability() {
     if (infectionProbability < 1.0) {
-      infectionProbability += Settings.chimpanzeeInfectionProbabilityRate;
+      infectionProbability += SimParameters.chimpanzeeInfectionProbabilityRate;
       if (infectionProbability > 1.0) infectionProbability = 1.0;
     }
   }
