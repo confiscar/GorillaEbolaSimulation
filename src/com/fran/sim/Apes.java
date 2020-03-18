@@ -1,14 +1,18 @@
 package com.fran.sim;
 
+import com.fran.util.IOHandler;
 import com.fran.util.RecordPrinter;
-import com.fran.util.ShellHandler;
-import picocli.CommandLine;
+import com.fran.util.Stats;
+import com.lowagie.text.Paragraph;
 import sim.engine.SimState;
 import sim.field.grid.SparseGrid2D;
 import sim.util.Bag;
 import sim.util.Int2D;
 import sim.field.network.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,8 +33,10 @@ public class Apes extends SimState {
   Network interactions = new Network(false);
   /** Aids the generation of ape groups. Used to shuffle food sources and assign to ape group */
   private Bag foodSources = new Bag(Settings.amountFoodSources);
-  /** Object gorilla group interactions into a file*/
+  /** Object gorilla group interactions into a file */
   public RecordPrinter recordPrinter = new RecordPrinter();
+
+  public Stats stat;
 
   /** Constructor that takes in seed and feeds in to super SimState constructor */
   public Apes(long seed) {
@@ -57,6 +63,19 @@ public class Apes extends SimState {
     habitat.clear();
     interactions.clear();
     foodSources.clear();
+
+    if (Settings.useSimlab) {
+      ArrayList<Double> list = IOHandler.factors.get(IOHandler.counter);
+      Settings.foodSpreadingIntensity = (int) Math.round(list.get(0));
+      Settings.transmissionProbability = list.get(1);
+      Settings.recoveryProbability = list.get(2);
+    }
+    /*System.out.println(
+    Settings.foodSpreadingIntensity
+        + " "
+        + Settings.transmissionProbability
+        + " "
+        + Settings.recoveryProbability);*/
 
     /*Initialize food and apes*/
     initializeFoodSource();
@@ -103,6 +122,32 @@ public class Apes extends SimState {
     }
   }
 
+  public void finish() {
+    Settings.statsFromRun.add(stat);
+
+    if (Settings.useSimlab) {
+      IOHandler.counter++;
+      try {
+        IOHandler.write("" + stat.getRatioOfDeceased());
+      } catch (IOException e) {
+        e.printStackTrace();
+        System.exit(-1);
+      }
+    }
+
+    /*System.out.println(
+        "T "
+            + stat.getTotalInitialPopulation()
+            + " I "
+            + stat.getTotalInfectedGorillas()
+            + " R "
+            + stat.getTotalRecoveredGorillas()
+            + " D "
+            + stat.getTotalDeceasedGorillas());
+    System.out.println("Ratio: " + stat.getRatioOfDeceased());*/
+    super.finish();
+  }
+
   /**
    * Initializes the Ape agents by assigning them a food source that will act as the centre of their
    * home range.
@@ -136,43 +181,53 @@ public class Apes extends SimState {
       sumOfGorillaPopulation += ape.getPopulation();
     }
 
-    double gorillaDensity =
-            (double) sumOfGorillaPopulation
-            / Math.pow((double)(((2 * Settings.foodSpreadingIntensity) + 1) * Settings.cellSideLength) / 1000,2);
+    stat = new Stats(sumOfGorillaPopulation);
 
-    System.out.println("Gorilla Density per km^2 : " + gorillaDensity);
+    // System.out.println("Gorilla Density per km^2 : " + stat.getGorillaDensity());
   }
 
-  /**Function called on setup to randomly place infections around the board.
-   * @param numberOfInitialInfections number of initial infections for the simulation*/
+  /**
+   * Function called on setup to randomly place infections around the board.
+   *
+   * @param numberOfInitialInfections number of initial infections for the simulation
+   */
   public void indexCase(int numberOfInitialInfections) {
-    //TODO Ensure that each infection placement is unique
+    // TODO Ensure that each infection placement is unique
     Stream<Object> stream = habitat.getAllObjects().stream();
     Bag apes = new Bag();
     apes.addAll(stream.filter(obj -> obj instanceof Ape).collect(Collectors.toList()));
     Ape ape = (Ape) apes.get(random.nextInt(apes.size()));
     ape.susceptibleCount--;
     ape.infectedCount++;
+    stat.incrementTotalInfectedGorillas();
     ape.infectionTimer.add(Settings.infectionTime);
   }
 
   public static void main(String[] args) {
-    ShellHandler shellHandler = new ShellHandler();
-    CommandLine cl = new CommandLine(shellHandler);
-    cl.parseArgs(args);
-    if (cl.isUsageHelpRequested()) {
-      CommandLine.usage(shellHandler, System.out);
-      return;
-    }
-
-    shellHandler.handleInputs();
-
     /* doLoop steps:
     Create instance of SimState subclass and initialize random number generator ->
     Call start() from your subclass ->
     Repeatedly call step() ->
     When schedule entirely empty of agents call finish() to clean up
      */
+    File input = new File("D:\\Users\\Fran\\Documents\\Modules\\Dissertation\\Simlab\\area-transmission-recovery-50000.sam");
+    File output = new File("D:\\Users\\Fran\\Documents\\Modules\\Dissertation\\Simlab\\outputv1.txt");
+
+    IOHandler.input = input;
+    IOHandler.output = output;
+    try {
+      IOHandler.writeHeader();
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(-1);
+    }
+    try {
+      IOHandler.read();
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(-1);
+    }
+
     doLoop(Apes.class, args);
 
     /* Since the framework uses threads, exit(0) has to be called, just in case

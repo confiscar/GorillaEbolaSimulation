@@ -16,7 +16,7 @@ public class FoodSource implements Steppable {
   /** Amount of days needed to pass for the next possible chimpanzee visit */
   private int visitedCounter;
   /** Probability of a visited tile to pass on an infection */
-  static double infectionProbability = 0.0;
+  static double infectionProbability = Settings.transmissionProbability;
   /** Amount of days that the effect of chimpanzees at a food source lasts */
   private int lingerCounter;
   /** Represents how much activity has occurred on food source */

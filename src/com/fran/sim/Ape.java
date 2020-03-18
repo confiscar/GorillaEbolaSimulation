@@ -3,6 +3,7 @@ package com.fran.sim;
 import javafx.util.Pair;
 import sim.engine.SimState;
 import sim.engine.Steppable;
+import sim.engine.Stoppable;
 import sim.field.grid.SparseGrid2D;
 import sim.field.network.Edge;
 import sim.util.Bag;
@@ -29,11 +30,6 @@ public class Ape implements Steppable {
 
   /** Integers representing the quantity of the gorillas (total, male, female) */
   private int populationCount;
-  /** Integers representing the quantity of female gorillas (total, male, female) */
-  private int femaleCount;
-  /** Integers representing the quantity of male gorillas (total, male, female) */
-  private int maleCount;
-
   int susceptibleCount;
   int infectedCount;
   int recoveredCount;
@@ -47,14 +43,6 @@ public class Ape implements Steppable {
   /** Java Bean to display population */
   public int getPopulation() {
     return this.populationCount;
-  }
-  /** Java Bean to display male apes */
-  public int getMales() {
-    return this.maleCount;
-  }
-  /** Java Bean to display females apes */
-  public int getFemales() {
-    return this.femaleCount;
   }
 
   public int getSusceptible() {
@@ -90,12 +78,10 @@ public class Ape implements Steppable {
     /*This will be the 'timer' for specific gorilla behaviour*/
     movementCounter = Settings.gorillaFoodWaitTime;
 
-    /*Calculates population between set boundaries and corresponding gender divisions*/
+    /*Calculates population between set boundaries*/
     populationCount =
         apes.random.nextInt(Settings.maxPopulation - Settings.minPopulation)
             + Settings.minPopulation;
-    femaleCount = (int) ((double) populationCount * apes.random.nextDouble());
-    maleCount = populationCount - femaleCount;
 
     /*Gets the moore neighbours (circle around the gorillas) */
     Bag allNeighbours =
@@ -162,6 +148,11 @@ public class Ape implements Steppable {
 
         if (hasSilverbackDied) {
           disperse(simState);
+          if(populationCount > 0){
+            hasSilverbackDied = false;
+            silverbackNumber = simState.random.nextInt(populationCount);
+            silverbackCounter = silverbackNumber;
+          }
         }
 
         /*Updates the network of interactions*/
@@ -296,6 +287,7 @@ public class Ape implements Steppable {
           infectedCount++;
           infectionTimer.add(Settings.infectionTime);
           infected++;
+          ((Apes) state).stat.incrementTotalInfectedGorillas();
         }
       }
     }
@@ -308,9 +300,11 @@ public class Ape implements Steppable {
       infectedCount--;
       if (randomChoose(state, Settings.recoveryProbability)) {
         recoveredCount++;
+        ((Apes) state).stat.incrementTotalRecoveredGorillas();
       } else {
         populationCount--;
         deceasedCount++;
+        ((Apes) state).stat.incrementTotalDeceasedGorillas();
         silverbackCounter--;
         if (silverbackCounter == 0) {
           hasSilverbackDied = true;
@@ -338,7 +332,8 @@ public class Ape implements Steppable {
 
     for (int i = 0; i < allObjects.size(); i++) {
       Object obj = allObjects.get(i);
-      if (obj != this && obj instanceof Ape && !((Ape) obj).groupInactive) {
+      //If the object is an ape, not inactive and the probability of dispersal returns true
+      if (obj != this && obj instanceof Ape && !((Ape) obj).groupInactive && randomChoose(state, Settings.probabilityOfDispersal)) {
         Int2D objLocation = habitat.getObjectLocation(obj);
         double probability = calculateProbabilityDistance(me.x, me.y, objLocation.x, objLocation.y);
         currentApesProbabilities.add(new Pair<>(obj, probability));
@@ -383,23 +378,28 @@ public class Ape implements Steppable {
       }
     }
 
-    //TODO Probability of dispersing set at a ceratin percentage
-
     for (int i = 0; i < apeOrder.size(); i++) {
         Ape ape = (Ape) ((Pair) normalisedProbabilities.get((int) apeOrder.get(i))).getKey();
         populationCount--;
         ape.populationCount++;
-        if (susceptibleCount != 0) {
-          ape.susceptibleCount++;
-          susceptibleCount--;
-        } else if(infectedCount != 0) {
-          ape.infectedCount++;
-          ape.infectionTimer.add(this.infectionTimer.remove(0));
-          infectedCount--;
-        } else {
-          ape.recoveredCount++;
-          recoveredCount--;
-        }
+        boolean chosen = false;
+        do{
+          double randomDouble = state.random.nextDouble();
+          if (susceptibleCount != 0 && randomDouble <= 1.0 / 3) {
+            ape.susceptibleCount++;
+            susceptibleCount--;
+            chosen = true;
+          } else if(infectedCount != 0 && randomDouble <= (1.0 / 3) * 2 && randomDouble > 1.0 / 3) {
+            ape.infectedCount++;
+            ape.infectionTimer.add(this.infectionTimer.remove(0));
+            infectedCount--;
+            chosen = true;
+          } else if(recoveredCount != 0 && randomDouble <= 1.0 && randomDouble > (1.0 / 3) * 2) {
+            ape.recoveredCount++;
+            recoveredCount--;
+            chosen = true;
+          }
+        }while(!chosen);
     }
 
     return true;
@@ -409,4 +409,5 @@ public class Ape implements Steppable {
     double random = ((Apes) state).random.nextDouble();
     return random <= probability;
   }
+
 }

@@ -1,5 +1,9 @@
 package com.fran.sim;
 
+import com.fran.util.Stats;
+
+import java.util.ArrayList;
+
 /**
  * Settings class controls the static options that will affect the simulation generation/running.
  * Settings should be accessible from a static instance anywhere its imported.
@@ -26,7 +30,7 @@ public class Settings {
   /** Timer to delete an item off a gorillas memory */
   public static int gorillaMemoryLength = 3;
   /** Chance of encountering a chimpanzee on a tile */
-  public static double chimpanzeeEncounter = 0.01;
+  public static double chimpanzeeEncounter = 0.001;
   /** Time that the effects of the chimpanzees linger */
   public static int chimpanzeeLingerTime = 7;
   /**
@@ -35,13 +39,13 @@ public class Settings {
    */
   public static double chimpanzeeInfectionProbabilityRate = 0.0;
   /** Probability of transmission between a single gorilla to a single gorilla */
-  public static double transmissionProbability = 0.2;
+  public static double transmissionProbability = 0.36826;
   /** Probability of a gorilla recovering after getting the virus */
-  public static double recoveryProbability = 0.5;
+  public static double recoveryProbability = 0.51213;
   /** Time to recover or die from disease. Measured as n * gorillaFoodWaitTime */
   public static int infectionTime = 3;
 
-  public static double probabilityOfDispersal = 0.2;
+  public static double probabilityOfDispersal = 0.7;
 
   /** Hides unvisited food sources */
   public static boolean hideUnusedFoodSources = true;
@@ -49,4 +53,9 @@ public class Settings {
   public static boolean enableHeatMap = true;
   /** Enables or disables the printing of interaction records */
   public static boolean enableRecordPrinting = true;
+  public static boolean useSimlab = true;
+
+  public static int numberOfRuns = 50000;
+  public static int numberOfFactors = 3;
+  public static ArrayList<Stats> statsFromRun = new ArrayList<>(numberOfRuns);
 }
