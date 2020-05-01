@@ -10,9 +10,9 @@ public class SimParameters {
   /** Amount of food sources in grid boundary */
   public static int amountFoodSources = 150;
   /** Defines a (2*n + 1)^2 area where the food can be placed */
-  public static int foodSpreadingIntensity = 15;
+  public static int foodSpreadingIntensity = 14;
   /** Area of home range will be radius*2 by radius*2 */
-  public static int homerangeRadius = 3;
+  public static int homerangeRadius = 2;
   /** How long each side of the cell is in metres. Used to calculate density */
   public static int cellSideLength = 100;
   /** Time in days each group of gorillas stays around a food source */
@@ -20,7 +20,7 @@ public class SimParameters {
   /** Timer to delete an item off a gorillas memory */
   public static int gorillaMemoryLength = 3;
   /** Chance of encountering a chimpanzee on a tile */
-  public static double chimpanzeeEncounter = 0.0;
+  public static double chimpanzeeEncounter = 0.001;
   /** Time that the effects of the chimpanzees linger */
   public static int chimpanzeeLingerTime = 7;
   /** Rate of increase of the chimpanzee probability after every infected gorilla */
