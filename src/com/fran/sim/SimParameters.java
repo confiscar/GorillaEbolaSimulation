@@ -10,9 +10,9 @@ public class SimParameters {
   /** Amount of food sources in grid boundary */
   public static int amountFoodSources = 150;
   /** Defines a (2*n + 1)^2 area where the food can be placed */
-  public static int foodSpreadingIntensity = 15;
+  public static int foodSpreadingIntensity = 14;
   /** Area of home range will be radius*2 by radius*2 */
-  public static int homerangeRadius = 3;
+  public static int homerangeRadius = 2;
   /** How long each side of the cell is in metres. Used to calculate density */
   public static int cellSideLength = 100;
   /** Time in days each group of gorillas stays around a food source */
@@ -32,5 +32,5 @@ public class SimParameters {
   /** Time to recover or die from disease. Measured as n * gorillaFoodWaitTime */
   public static int infectionTime = 3;
   /** Probability that when the silverback dies, an individual gorilla will move to another group */
-  public static double probabilityOfDispersal = 0.7;
+  public static double probabilityOfDispersal = 0.5;
 }

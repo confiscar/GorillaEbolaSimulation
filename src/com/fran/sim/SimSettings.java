@@ -21,14 +21,14 @@ public class SimSettings {
   public static int seed = 10000;
   /** SimLab sample file location used to set the factors every run */
   public static String inputFile =
-      "D:\\Users\\Fran\\Documents\\Modules\\Dissertation\\Simlab\\area-transmission-recovery-50000.sam";
+      "D:\\Users\\Fran\\Documents\\Modules\\Dissertation\\Testing\\v2\\TransmissionProbabilityTesting\\20000Runs_NoDispersal\\samples.sam";
   /** Output file with the outputFactors used to analyse using SimLab */
   public static String outputFile =
-      "D:\\Users\\Fran\\Documents\\Modules\\Dissertation\\Simlab\\outputv1.txt";
+      "D:\\Users\\Fran\\Documents\\Modules\\Dissertation\\Testing\\v2\\TransmissionProbabilityTesting\\20000Runs_NoDispersal\\output.txt";
   /** Amount of steps per run performed */
   public static int numberOfSteps = 364;
   /** Amount of total runs scheduled if program is run in Apes entry point */
-  public static int numberOfRuns = 10000;
+  public static int numberOfRuns = 20000;
   /** Name of the factors outputted */
   public static String[] outputFactorNames = {"DeceasedRatio"};
 
@@ -45,9 +45,8 @@ public class SimSettings {
     if (SimSettings.useSimlab) {
       ArrayList<Double> list = IOHandler.getNextRowOfFactors();
       // Use list.get() to get factors and associate them to the corresponding setting
-      SimParameters.foodSpreadingIntensity = (int) Math.round(list.get(0));
-      SimParameters.transmissionProbability = list.get(1);
-      SimParameters.recoveryProbability = list.get(2);
+      //SimParameters.infectionTime = (int) Math.round(list.get(0));
+      SimParameters.transmissionProbability = list.get(0);
     }
   }
 }

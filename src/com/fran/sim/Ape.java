@@ -135,7 +135,8 @@ public class Ape implements Steppable {
         infect(simState, infectedCount, SimParameters.transmissionProbability);
 
         if (fs.visitedByChimpanzees) {
-          if (infect(simState, 1, fs.infectionProbability) > 0) {
+          int infected = infect(simState, 1, fs.infectionProbability);
+          if (infected > 0) {
             fs.infectedInCurrentStep = true;
             //System.out.print(FoodSource.infectionProbability);
           }
@@ -281,7 +282,8 @@ public class Ape implements Steppable {
 
     for (int i = 0; i < numberOfInfectedSources && susceptibleCount > 0; i++) {
       for (int j = 0, k = susceptibleCount; j < k && susceptibleCount > 0; j++) {
-        if (randomChoose(state, transmissionProbability)) {
+        boolean choose = randomChoose(state, transmissionProbability);
+        if (choose) {
           susceptibleCount--;
           infectedCount++;
           infectionTimer.add(SimParameters.infectionTime);

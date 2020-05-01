@@ -107,6 +107,7 @@ public class Apes extends SimState {
       habitat.setObjectLocation(food, location);
       foodSources.add(food);
       schedule.scheduleRepeating(food);
+
     }
   }
 
